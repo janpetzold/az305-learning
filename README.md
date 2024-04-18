@@ -1,11 +1,12 @@
 ﻿# Introduction
 
-This is my own preparation material I created for the Az305 exam. The content is primarily from two sources:
+This is my own preparation material I created for the [AZ-305 exam](https://learn.microsoft.com/en-us/credentials/certifications/exams/az-305/). The content is primarily from two sources:
 
 1. [Az305 learning path](https://learn.microsoft.com/en-us/credentials/certifications/exams/az-305/)
 1. [Az305 Savill training video](https://www.youtube.com/watch?v=vq9LuCM4YP4)
 
 I have quite a bit of working experience with Azure so I left out obvious things known to me with the goal to keep this compact (less than 30 pages when printed) & readable without skipping any major topic.
+
 # Fundamentals
 
 Typical Azure hierarchy:
@@ -15,7 +16,7 @@ Typical Azure hierarchy:
 - **Resource groups** are logical containers into which Azure resources are deployed and managed.
 - **Resources** are instances of services that you create. For example, virtual machines, storage, and SQL databases.
 
-Management Groups:
+**Management Groups**:
 
 - Limit the regions where virtual machines can be created, across subscriptions.
 - Provide user access to multiple subscriptions by creating one role assignment that's inherited by other subscriptions.
@@ -25,18 +26,17 @@ Management Groups:
 - Azure role-based access control authorization for management group operations isn't enabled by default.
 - By default, all new subscriptions are placed under the root management group.
 - 10,000 management groups can be supported in a single directory.
-- A management group tree can support up to six levels of depth. This limit doesn't include the root level or the subscription level.
 - Each management group and subscription can support only one parent.
 
-Subscriptions:
+**Subscriptions**:
 
 - Subscriptions can provide separate billing environments, such as development, test, and production.
 - Policies for individual subscriptions can help satisfy different compliance standards.
 - You can organize specialized workloads to scale beyond the limits of an existing subscription.
 - By using subscriptions, you can manage and track costs for your organizational structure.
-- Boundary for things (e.g. Virtual Network), examples: Separation of duties, Dev/test versus generic nonproduction, Different customers, Different departments or business units, Different projects
+- Boundary for things (e.g. Virtual Network), examples: Separation of duties, dev/test versus generic nonproduction, Different customers, Different departments or business units, Different projects
 
-Resource Groups:
+**Resource Groups**:
 
 - Place resources of similar usage, type, or location in logical groups. (resources of the group can be used in different locations though)
 - Organize resources by life cycle so all the resources can be created or deleted at the same time.
@@ -47,7 +47,7 @@ Resource Groups:
 - A resource can only be in one group at a time.
 
 
-` `Azure Landing Zones:
+**Azure Landing Zones**:
 
 - Landing zones are defined by management groups and subscriptions that are designed to scale according to business needs and priorities.
 - Azure policies are associated with landing zones to ensure continued compliance with the organization platform.
@@ -56,7 +56,7 @@ Resource Groups:
 ![](images/az-mgmt-sub-res-overview.png)
 
 
-**Region pairs**: Most Azure regions are paired with another region within the same geography (such as US, Europe, or Asia) at least 300 miles away. This approach allows for the replication of resources across a geography that helps reduce the likelihood of interruptions because of events such as natural disasters, civil unrest, power outages, or physical network outages that affect an entire region. Examples of region pairs in Azure are West US paired with East US and South-East Asia paired with East Asia. Sovereign regions are instances of Azure that are isolated from the main instance of Azure. You may need to use a sovereign region for compliance or legal purposes.
+**Region pairs**: Most Azure regions are paired with another region within the same geography (such as US, Europe, or Asia) at least 300 miles away. This approach allows for the replication of resources across a geography that helps reduce the likelihood of interruptions because of events such as natural disasters, civil unrest, power outages, or physical network outages that affect an entire region. Examples of region pairs in Azure are West US paired with East US and South-East Asia paired with East Asia. Sovereign regions are instances of Azure that are isolated from the main instance of Azure. You may need to use a sovereign region for compliance or legal purposes. Paired region for services are read-only by default.
 
 # Controls
 
@@ -79,8 +79,6 @@ Things that can be done with RBAC:
 
 Roles can have Actions (Create, Read, ...) and DataActions (e.g. read Blob)
 
-Access Reviews for identity governance: Who has roles, which groups, app access > checks can also be delegated like "Verify you still need this"
-
 Azure Blueprints supports Resource Groups, ARM, RBAC, Policies
 
 # Identity
@@ -88,6 +86,8 @@ Azure Blueprints supports Resource Groups, ARM, RBAC, Policies
 Zero Trust:
 
 ![](images/zero-trust.png)
+
+Distinction: Entra ID does LDAP, Kerberos etc. whereas Azure AD rather does OAuth, OpenID, SAML etc.
 
 Microsoft Entra ID provides services such as:
 
@@ -105,15 +105,10 @@ With External Identities, external users can "bring their own identities." Wheth
 **Entra B2B**:
 
 - With Microsoft Entra B2B, the external partner uses their own identity management solution. Microsoft Entra ID isn't required.
-- No need to manage the *external* accounts or passwords.
+- No need to manage the external accounts or passwords.
 - No need to sync the external accounts or manage the account lifecycles.
 - External users use their identities to collaborate with our organization. The identities are managed by the partner themselves, or by another external identity provider on their behalf.
 - Guest users sign in to our apps and services with their own work, school, or social identities.
-
-
-Entra ID does LDAP, Kerberos, ...
-
-Azure AD rather does OAuth, OpenID, SAML, ...
 
 [Azure AD B2C](https://learn.microsoft.com/en-us/azure/active-directory-b2c/overview "https://learn.microsoft.com/en-us/azure/active-directory-b2c/overview") is a type of Microsoft Entra tenant for managing customer identities and their access to your apps. The Microsoft Entra tenant represents your organization. The Azure AD B2C tenant represents the identities for your customer apps:
 
@@ -147,7 +142,7 @@ Microsoft Entra access review is a planned review of the access needs, rights, a
 
 Many resources allow managed identity using a system-assigned Service Principal, 1:1 relation so only for one resource.
 
-The service principal for an app can be considered *an instance of an app*. Service principals generally reference an app object. One app object can be referenced by multiple service principals across directories. There are three types of service principals that you can use for your organization:
+The service principal for an app can be considered an **instance** of an app. Service principals generally reference an app object. One app object can be referenced by multiple service principals across directories. There are three types of service principals that you can use for your organization:
 
 - **Application**: An application service principal is a local representation, or app instance, of a global app object in a single tenant or directory. The service principal object defines what the app can do in the specific tenant, who can access the app, and what resources the app can access.
 - **Managed identities** provide an identity for applications to use when connecting to resources that support Microsoft Entra authentication. Common terms:
@@ -171,8 +166,6 @@ Data Protection for KeyVault:
 - **Purge protection** Purge protection is designed to prevent the deletion of your key vault, keys, secrets, and certificates by a malicious insider. Think of this as a recycle bin with a time based lock. You can recover items at any point during the configurable retention period.
 
 Permissions can be Vault-based or Azure RBAC
-
-Paired region for services are read-only be default
 
 Grant access to resources on a need-to-know-basis. Also classify data based on its type, sensitivity, and potential risk. Assign a confidentiality level for each. Example - a customer service representative may have a legitimate need to access customer data to resolve customer issues, a finance employee who creates invoices not.
 
@@ -269,7 +262,7 @@ Managed Disk can be encrypted using Microsoft Managed Key or Disk Encryption Set
 Three encryption options:
 
 - [**Azure Disk Encryption (ADE)**](https://learn.microsoft.com/en-us/azure/virtual-machines/linux/disk-encryption-overview "https://learn.microsoft.com/en-us/azure/virtual-machines/linux/disk-encryption-overview") encrypts the VM's virtual hard disks (VHDs). If VHD is protected with ADE, the disk image is accessible only by the VM that owns the disk.
-- **Server-Side Encryption (SSE)** is performed on the physical disks in the data center. If someone directly accesses the physical disk, the data will be encrypted. When the data is accessed from the disk, it's decrypted and loaded into memory. This form of encryption is also referred to as *encryption at rest* or Azure Storage encryption.
+- **Server-Side Encryption (SSE)** is performed on the physical disks in the data center. If someone directly accesses the physical disk, the data will be encrypted. When the data is accessed from the disk, it's decrypted and loaded into memory. This form of encryption is also referred to as encryption at rest or Azure Storage encryption.
 - **Encryption at host** ensures that data stored on the VM host is encrypted at rest and flows encrypted to the Storage service. Disks with encryption at host enabled aren't encrypted with SSE. Instead, the server hosting your VM provides the encryption for your data, and that encrypted data flows into Azure Storage.
 
 
@@ -278,8 +271,6 @@ Storage Account key access can be disabled, alternative would be Shared Access S
 The default network rule is to allow all connections from all networks.
 
 Azure Queue storage is a service for storing large numbers of messages. Once stored, you can access the messages from anywhere in the world via authenticated calls using HTTP or HTTPS. A queue can contain as many messages as your storage account has room for (potentially millions). Each individual message can be up to 64 KB in size. 
-
-Azure File Sync is a tool that lets you centralize your file shares in Azure Files and keep the flexibility, performance, and compatibility of a Windows file server.
 
 The Azure Import/Export service migrates large quantities of data between an on-premises location and an Azure storage account. By using the Import/Export service, you send and receive physical disks that contain your data between your on-premises location and an Azure datacenter.
 
@@ -314,6 +305,12 @@ Azure SQL Managed Instance
 
 Both SQL Database and SQL Managed Instance use SQL Server technology to create full backups every week, differential backups (=increments) every 12-24 hours, and transaction log backups (to restore transaction logs up to a specific time, which includes the moment before data was mistakenly deleted) every 5 to 10 minutes.
 
+Pricing Options:
+
+- **vCore**: A vCore is a virtual core. You choose the number of virtual cores and have greater control over your compute costs. This option supports the Azure Hybrid Benefit for SQL Server and reserved capacity (pay in advance). Generally recommended by Microsoft.
+- **DTU**: A DTU (Database Transaction Unit) is a combined measure of compute, storage, and I/O resources. The DTU option is a simple, preconfigured purchase option. This option isn't available for Azure SQL Managed Instance.
+- **Serverless**: A compute tier for single databases in SQL Database. The serverless model automatically scales compute, based on workload demand, and bills only for the amount of compute used.
+
 Geo-restore allows you to recover from a geographic disaster when you cannot access your database or backups in the primary region. It creates a new database on any existing server or managed instance, in any Azure region.
 
 Azure uses Transparent data encryption (TDE) for Data at Rest. All new SQL DBs and Azure SQL Managed Instanceafter February 2019 have TDE enabled. TDE performs encryption and decryption of the data at the page level.  The data is encrypted as the data is written to the data page on disk and decrypted when the data page is read into memory. Backups are also encrypted. DB Encrpytion keys can be Service- oder Customer-managed.
@@ -323,12 +320,6 @@ By default, Azure SQL Database automatic backups remain available to restore fo
 The Hyperscale service tier is available only in Azure SQL Database. This service tier has a unique architecture because it uses a tiered layer of caches and page servers to expand the ability to quickly access database pages without having to access the data file directly. This tier uses snapshots, which allow for nearly instantaneous database backups, regardless of database size. Database restores take minutes rather than hours or days. Best option for large-scale on-premise database migration (up to 100TB).
 
 SLA Azure Database for MySQL is 99,99%
-
-Pricing Options:
-
-- **vCore**: A vCore is a virtual core. You choose the number of virtual cores and have greater control over your compute costs. This option supports the Azure Hybrid Benefit for SQL Server and reserved capacity (pay in advance). Generally recommended by Microsoft.
-- **DTU**: A DTU (Database Transaction Unit) is a combined measure of compute, storage, and I/O resources. The DTU option is a simple, preconfigured purchase option. This option isn't available for Azure SQL Managed Instance.
-- **Serverless**: A compute tier for single databases in SQL Database. The serverless model automatically scales compute, based on workload demand, and bills only for the amount of compute used.
 
 Azure PostgreSQL also offers a scale-out hyperscale solution called Citus. Citus provides both scale-out and additional high availability for a server group. 
 
@@ -367,13 +358,9 @@ Azure SQL Edge
 - lightweight, less than 500MB startup memory footprint
 - can be deployed connected (via Azure Marketplace as module for IoT Edge) or disconnected (Container image from dockerhub, standalone container or part of K8S cluster)
 
-Data security needs data classification (Azure Purview), data at rest (transparent data encryption), in transit, in use (dynamic data masking e.g. for last digits of credit card, always encrpyting even on client side)
-
 Tables: very simple key/value store
 
-CosmosDB: more advanced solution, multi-region, different consistency models
-
-CosmosDB API can be SQL, MongoDB, Cassandra, Table, Gremlin (Graph). Azure Cosmos DB has single-digit millisecond response times and guaranteed speed at any scale.
+CosmosDB: more advanced solution, multi-region, different consistency models. CosmosDB API can be SQL, MongoDB, Cassandra, Table, Gremlin (Graph). Cosmos has single-digit millisecond response times and guaranteed speed at any scale.
 
 Azure Data Factory: ETL data integration process to orchestrate data movement and transform data at scale, 90+ built-in data connectors helping to build pipelines. Four major steps for a data-driven workflow:
 
@@ -390,9 +377,9 @@ Azure Data Lake Storage Gen2: supports HDFS, full hierarchy, POSIX. It stores a
 
 ![](images/data-lake-storage-comparison.png)
 
-Azure Data Lake can ingest real-time data directly from multiple sources.
-
 Azure Stream Analytics is a fully managed (PaaS offering), real-time analytics and complex event-processing engine. It offers the possibility to perform real-time analytics on multiple streams of data from sources like IoT device data, sensors, clickstreams, and social media feeds. Supports data formats CSV, JSON, and Avro. As ingest Azure Event Hubs (including Azure Event Hubs from Apache Kafka), Azure IoT Hub, or Azure Blob Storage are supported. It is based on SQL to filter, sort, aggregate, and join streaming data over a period. For ultra-low latency analytics, run Stream Analytics on IoT Edge or Azure Stack.
+
+Data security needs data classification (Azure Purview), data at rest (transparent data encryption), in transit, in use (dynamic data masking e.g. for last digits of credit card, always encrypting even on client side)
 
 ## Azure Databricks & Synapse
 
@@ -454,21 +441,18 @@ Azure Service Bus is a fully managed enterprise message broker. It supports mess
 
 Azure Service Bus queues provide advanced message handing, and can group messages into a transaction.
 
-Azure Event Hubs is a fully managed, big data streaming platform and event ingestion service. It implements a distinct *pull* mode:
+Azure Event Hubs is a fully managed, big data streaming platform and event ingestion service. It implements a distinct **pull** mode:
 
 - Event Hubs holds each message in its cache and allows it to be read.
 - When a message is read from Event Hubs, it's not deleted. The message remains for other consumers.
 
-It does not have a built-in mechanism to handle messages that aren't processed as expected.
+It does not have a built-in mechanism to handle messages that aren't processed as expected. Messages have max. retention of 7 days.
 
-Azure Event Grid is a fully managed event routing service that runs on Azure Service Fabric suitable for reactive programming. It aggregates all your events and provides routing from any source to any destination.
+Event Hub is focused on high throughput and streaming (telemetry, logging), Service Bus (like Kafka) more FIFO-oriented (queues, topics) with more complex routing & processing of messages.
 
-Azure Batch: Configuration of batch jobs on top of VMs
+Azure Event Grid is a fully managed event routing service that runs on Azure Service Fabric suitable for reactive programming. It aggregates all your events and provides routing from any source to any destination. It understands all kind of sources (Storage, IoT Hub, ML, Redis, ...) and registers handlers (Function, Storage Queue, Logic Apps, ...)
 
 Logic Apps: Graphical Designer for event-based actions, no code, lots of templates and connectors, not ideal for real-time requirements, complex business rules, non-standard services.
-
-
-Event Grid: handling various events, understands all kind of sources (Storage, IoT Hub, ML, Redis, ...) and registers handlers (Function, Storage Queue, Logic Apps, ...)
 
 Azure Queues: basic FIFO, Service Bus is more advanced with topics for multiple subscribers
 
@@ -497,8 +481,7 @@ Virtual networks allow for the use of 65,536 IP addresses. Therefore assign an a
 
 Virtual network address space must not overlap with on-premises network ranges. 
 
-
-You can create multiple subnets within each virtual network. By default, Azure routes network traffic between all subnets in a virtual network. Your subnet decisions are based on your technical and organizational requirements. You create subnets by using CIDR notation. When you're deciding on the network range for subnets, Azure keeps five IP addresses from each subnet that can't be used. For example, if you create the smallest available subnet of /29 (with eight IP addresses), Azure keeps five addresses. In this case, you only have three usable addresses that can be assigned to hosts on the subnet. When creating subnets in a virtual network Azure automatically creates routes so communication between subnets is enabled. These routes can be modified by using static routes, which are stored as UDRs in Azure. UDRs are also called *custom routes*.
+You can create multiple subnets within each virtual network. By default, Azure routes network traffic between all subnets in a virtual network. Your subnet decisions are based on your technical and organizational requirements. You create subnets by using CIDR notation. When you're deciding on the network range for subnets, Azure keeps five IP addresses from each subnet that can't be used. For example, if you create the smallest available subnet of /29 (with eight IP addresses) you'd only have three usable addresses that can be assigned to hosts on the subnet. When creating subnets in a virtual network Azure automatically creates routes so communication between subnets is enabled. These routes can be modified by using static routes, which are stored as UDRs in Azure. UDRs are also called custom routes.
 
 Because it's easy to implement and deploy, and it works well across regions and subscriptions, virtual network peering should be your first choice when you need to integrate Azure virtual networks.
 
@@ -583,7 +566,7 @@ Azure Traffic Manager is a DNS-based traffic load balancer that enables you to d
 
 Azure Load Balancer provides high-performance, low-latency Layer 4 (Transport layer) load-balancing for all UDP and TCP protocols. To provide zonal fault tolerance, you can deploy a standard Azure Load Balancer instance with internet-facing workloads or application tiers.
 
-Azure Application Gateway is a web traffic load balancer that enables you to manage traffic to your web applications.  There are two primary methods of routing traffic:
+Azure Application Gateway is a web traffic load balancer that enables you to manage traffic to your web applications. There are two primary methods of routing traffic:
 
 - Path-based routing: Send requests with different URL paths to a different pool of back-end servers
 - Multiple-site routing: Support tenants with virtual machines or other resources that host a web application
@@ -622,19 +605,13 @@ Azure Automation is Cloud-based automation and configuration for...
 
 Azure App Configuration provides a service to centrally manage application settings and feature flags. You can use App Configuration to store all the settings for your application and secure their accesses in one place.
 
-Blue/Green deployment: Deploy new version to dedicated environment and switch over
-
-Canary: Deploy for small number of users and increase over time
-
-A/B-Testing: Feature flags, some customers get A and others B
-
-Progressive exposure approach: Test each update in a controlled manner (e.g. feature flags, Blue/Greeen, Canary Releases, subset of customers) so that issues are fixed early in production. Avoid rolling out a faulty update that impacts your entire customer base. Test whether the update is backward and forward compatible.
+Progressive exposure approach: Test each update in a controlled manner (e.g. feature flags A/B testing, Blue/Green for switchover to other environment, Canary Releases to test with small amount of users and increase over time, subset of customers) so that issues are fixed early in production. Avoid rolling out a faulty update that impacts your entire customer base. Test whether the update is backward and forward compatible.
 
 Testing types would be Unit, Smoke, Integration, Manual, Stress, Security, Fault injection
 
 Performance Efficiency: Consumption matches load (Autoscale in and out)
 
-` `It is important to monitor both real and synthetic transactions to ensure that performance during real-world usage is acceptable.
+It is important to monitor both real and synthetic transactions to ensure that performance during real-world usage is acceptable.
 
 Proxy Placement Group (PPG): reduce latency between resources in a region
 
@@ -667,15 +644,11 @@ To use Azure Service Map, you need the following configuration:
 - Azure Monitor Agent installed on the Windows or Linux computers. This agent collects events and performance data from the computer and delivers it to the Log Analytics workspace.
 - The Dependency Agent installed on the Windows or Linux computers. This agent collects discovered data about processes running on the computer, and external process dependencies. The Dependency Agent requires Azure Monitor Agent to be installed on the same machine.
 
-
-
 Azure Monitor Logs can be deployed centralized (one workspace), Decentralized (workspace per team) or hybrid.
 
 Azure Monitor Logs can be accessed in Workspace or Resource (resource, resource group, subscription) context.
 
-Subscription have Activity Logs
-
-Resources have Metrics, Logs (need to be configured)
+Subscription have Activity Logs, Resources have Metrics & Logs (need to be configured)
 
 Workbooks provide a flexible canvas for data analysis and the creation of rich visual reports within the Azure portal. Customers use Workbooks to explore the usage of an app, to do root cause analysis, put together an operational playbook, and many other tasks
 
@@ -700,7 +673,7 @@ Log destinations (configure at Diagnostic Settings):
 
 Alert rules: triggered by Metrics, Logs, Activity Log, initializes Action Groups that can send SMS, call API etc.
 
-# Reliability
+# Availability
 
 Workload criticality:
 
@@ -711,20 +684,37 @@ Workload criticality:
 - **Low**: Impact on business processes isn't measurable. No brand damage or upstream losses are likely. Localized impact on a single team is expected.
 - **Unsupported**: No business owner, team, or process associated with this workload can justify any investment in the workload's ongoing management.
 
-The most common metric for impact is *impact per hour*, meaning operating revenue losses per hour of outage.
+The most common metric for impact is **impact per hour***, meaning operating revenue losses per hour of outage.
+
+Scaling up is adding more resources (CPU, RAM) to a single instance. Also known as vertical scaling. Scaling out is adding more instances. Also known as horizontal scaling.
+
+Reliability: basically an SLA with defined number of 9s
+
+Azure provides three main options to enhance availability for IaaS deployments:
+
+- Availability Sets: provide uptime against Azure-related maintenance and single points of failure in a single data center. Applications are guaranteed to never run on the same physical server. Can't be combined with AZs.
+- Availability Zones: account for data center-level failure in Azure. A zone is a unique physical location, that is, a data center, within an Azure region.
+- Azure Site Recovery:  replicates a VM from one Azure region to another to create a disaster recovery solution for that VM.
 
 Availability Sets will compensate Rack/Server failures but not Datacenter failures, AZs do that. Availability sets group VMs in two ways: update domain and fault domain.
 
 - **Update domain**: The update domain groups VMs that can be rebooted at the same time. This allows you to apply updates while knowing that only one update domain grouping will be offline at a time. All of the machines in one update domain will be updated. An update group going through the update process is given a 30-minute time to recover before maintenance on the next update domain starts.
 - **Fault domain**: The fault domain groups your VMs by common power source and network switch. By default, an availability set will split your VMs across up to three fault domains. This helps protect against a physical power or networking failure by having VMs in different fault domains (thus being connected to different power and networking resources).
 
-Zone redundant service automatically distributes load across zones
 
-Multiple regions also increases availability (Geo replication)
+Azure Site Recovery: define how your virtual machines are failed over, and the order in which they're restarted after successful failover. This also works with On-Premise resources / in hybrid scenarios. Azure Site Recovery is designed to provide (continuous) replication to a secondary region (e.g. for VMs). Site recovery offers
 
-ASR can replicate VMs between regions, can also happen on app level
+- **Site Recovery service**: Site Recovery helps ensure business continuity by keeping business apps and workloads running during outages. Site Recovery [replicates](https://learn.microsoft.com/en-us/azure/site-recovery/azure-to-azure-quickstart "https://learn.microsoft.com/en-us/azure/site-recovery/azure-to-azure-quickstart") workloads running on physical and virtual machines (VMs) from a primary site to a secondary location. When an outage occurs at your primary site, you fail over to a secondary location, and access apps from there. After the primary location is running again, you can fail back to it.
+- **Backup service**: The [Azure Backup/](https://learn.microsoft.com/en-us/azure/backup/ "https://learn.microsoft.com/en-us/azure/backup/") service keeps your data safe and recoverable.
 
-Azure Front Door will usually point to different App Gateways (all Layer 7), alternative is a DNS Solution like Traffic Manager pointing to different DNS names
+Examples of high-availability design components include clustering and load balancing:
+
+- Clustering replaces a single VM with a set of coordinated VMs. When one VM fails or becomes unreachable, services can fail over to another one that can service the requests.
+- Load balancing spreads requests across many instances of a service, detecting failed instances and preventing requests from being routed to them.
+
+Drivers are Recovery Point Objective (how much data can I lose), Recovery Time Objective (be up & running in 1h). With RPO and RTO defined, you can design backup, restore, replication, and recovery capabilities into your architecture to meet these objectives.
+
+MTBF (Mean Time Between Failures) is how long a component can reasonably expect to last between outages. MTTR is the average time it takes to restore a component after a failure.
 
 ## Backup
 
@@ -737,7 +727,7 @@ Azure Blob Storage backup and recovery:
 
 Azure Blob Storage backup and recovery: local backup solution for Azure Blob Storage - backup data is stored in your source Azure storage account rather than being transferred to an Azure Backup storage vault.
 
-- Operational backup for Azure blobs provides you with a *continuous backup* solution. You don't need to schedule any backups.
+- Operational backup for Azure blobs provides you with a continuous backup solution. You don't need to schedule any backups.
 - All changes in an operational blob backup are retained for a specified period of time, and restorable from a selected point in time.
 - The [soft delete feature](https://learn.microsoft.com/en-us/azure/backup/backup-azure-security-feature-cloud "https://learn.microsoft.com/en-us/azure/backup/backup-azure-security-feature-cloud") lets you protect your data from accidental deletion or corruption. During the retention period, you can restore a soft-deleted blob object to its state at the time it was deleted. Soft delete is available for blobs and containers.
 - The retention period for deleted blobs or containers can be specified between 1 and 365 days. The default period is seven days.
@@ -745,49 +735,22 @@ Azure Blob Storage backup and recovery: local backup solution for Azure Blob St
 - The [point-in-time restore feature for block blobs](https://learn.microsoft.com/en-us/azure/storage/blobs/point-in-time-restore-overview "https://learn.microsoft.com/en-us/azure/storage/blobs/point-in-time-restore-overview") lets you protect against accidental deletion or corruption. During the retention period, you can restore block blobs from the present state to a state at a previous time.
 - The [resource lock](https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/lock-resources "https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/lock-resources") feature prevents resources from being accidentally deleted or changed. You can set the resource lock to prohibit deletion or allow reading only. Details:
   - **CanNotDelete** permits authorized users to read and modify a resource, but they can't delete the resource without first removing the lock.
-  - **ReadOnly** allows authorized users to read a resource, but they can't delete or change the resource. Applying this lock is like restricting all authorized users to the permissions granted by the *Reader* role in Azure RBAC.
-
-Azure Files provides the capability to take share snapshots of file shares. Snapshots are incremental. Only the deltas between your snapshots are stored.
+  - **ReadOnly** allows authorized users to read a resource, but they can't delete or change the resource. Applying this lock is like restricting all authorized users to the permissions granted by the Reader role in Azure RBAC.
 
 The backup job for a virtual machine involves two phases:
 
 - First, a virtual machine snapshot is taken.
 - Second, the virtual machine snapshot is transferred to a Recovery Services vault.
 
+Azure Files provides the capability to take share snapshots of file shares. Snapshots are incremental. Only the deltas between your snapshots are stored.
+
 Cross Region Restore allows you to restore Azure virtual machines in a secondary region, which is an Azure paired region. This option lets you conduct drills to meet audit or compliance requirements. You can also restore the virtual machine or its disk if there's a disaster in the primary region. 
-
-
-# Availability
-
-Scaling up is adding more resources (CPU, RAM) to a single instance. Also known as vertical scaling. Scaling out is adding more instances. Also known as horizontal scaling.
-
-Reliability: basically an SLA with defined number of 9s
-
-Azure provides three main options to enhance availability for IaaS deployments:
-
-- Availability Sets: provide uptime against Azure-related maintenance and single points of failure in a single data center. Applications are guaranteed to never run on the same physical server. Can't be combined with AZs.
-- Availability Zones: account for data center-level failure in Azure. A zone is a unique physical location, that is, a data center, within an Azure region.
-- Azure Site Recovery:  replicates a VM from one Azure region to another to create a disaster recovery solution for that VM.
-
-Azure Site Recovery: define how your virtual machines are failed over, and the order in which they're restarted after successful failover. This also works with On-Premise resources / in hybrid scenarios. Azure Site Recovery is designed to provide (continuous) replication to a secondary region (e.g. for VMs). Site recovery offers
-
-- **Site Recovery service**: Site Recovery helps ensure business continuity by keeping business apps and workloads running during outages. Site Recovery [replicates](https://learn.microsoft.com/en-us/azure/site-recovery/azure-to-azure-quickstart "https://learn.microsoft.com/en-us/azure/site-recovery/azure-to-azure-quickstart") workloads running on physical and virtual machines (VMs) from a primary site to a secondary location. When an outage occurs at your primary site, you fail over to a secondary location, and access apps from there. After the primary location is running again, you can fail back to it.
-- **Backup service**: The [Azure Backup/](https://learn.microsoft.com/en-us/azure/backup/ "https://learn.microsoft.com/en-us/azure/backup/") service keeps your data safe and recoverable.
-
-Examples of high-availability design components include clustering and load balancing:
-
-- Clustering replaces a single VM with a set of coordinated VMs. When one VM fails or becomes unreachable, services can fail over to another one that can service the requests.
-- Load balancing spreads requests across many instances of a service, detecting failed instances and preventing requests from being routed to them.
-
-With RPO and RTO defined, you can design backup, restore, replication, and recovery capabilities into your architecture to meet these objectives.
-
-Drivers are Recovery Point Objective (how much data can I lose), Recovery Time Objective (be up & running in 1h)
-
-MTBF (Mean Time Between Failures) is how long a component can reasonably expect to last between outages. MTTR is the average time it takes to restore a component after a failure.
 
 # Security
 
 Regulatory requirements (PCI, GDPR, ...) driving configurations, Zero Trust (re-evaluate also inside the network)
+
+![](images/zero-trust.png)
 
 Defense-in-depth overview of the role of each layer (like an onion):
 
@@ -828,7 +791,9 @@ Chargeback model: any IT costs that are associated with a specific business unit
 
 Typical measures are right SKU, service tiers, instance sizes, stop/deallocation of resources (Storage, Network, CPU, memory), spot & reserved instances
 
-Azure Pricing Calculator for estimating the expected monthly bill and track actual account usage / TCO Calculator: estimate cost savings realizable by migrating workloads to Azure
+Azure Pricing Calculator: Estimate the expected monthly bill and track actual account usage
+
+TCO Calculator:Eestimate cost savings realizable by migrating workloads to Azure
 
 Cost Model: predict total cost of ownership (TCO) in a workload. FInancial limits are always set by a budget. Predictions/spikes can be analyzed via variation of the cost model.
 
