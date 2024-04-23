@@ -61,14 +61,14 @@ Typical Azure hierarchy:
 # Controls
 
 Policy: What can you do (Guardrails)
-
 RBAC: Who can do it (Identity, Scope, Roles/Actions)
-
 Budget: How much
+
+RBAC can be set on resource group level. Policies shall be set on Management group level to make sure these are applied for new subscriptions.
 
 Azure Policy is a service in Azure that enables you to create, assign, and manage policies to control or audit your resources. These policies enforce different rules over your resource configurations so the configurations stay compliant with corporate standards.
 
-Initiatives can group multiple policies together
+Initiatives can group multiple policies together.
 
 Things that can be done with RBAC:
 
@@ -120,10 +120,11 @@ With External Identities, external users can "bring their own identities." Wheth
 
 Azure AD Domain Services can create managed ID in virtual network e.g. based on LDAP
 
-
 Conditional Access is a tool that Microsoft Entra ID uses to allow (or deny) access to resources based on identity signals. These signals include who the user is, where the user is, and what device the user is requesting access from.
 
 ![](images/conditional-access.png)
+
+So Conditional Access can use conditions user/group, application, device state, IP range, client application and sign-in risk.
 
 To use Conditional Access, you need a Microsoft Entra ID P1 or P2 license. If you have a Microsoft 365 Business Premium license, you also have access to Conditional Access features.
 
@@ -155,10 +156,14 @@ There are also User-assigned managed identities that can be assigned to multiple
 
 There are two types of managed identities:
 
-- **System-assigned**: Some Azure services allow you to enable a managed identity directly on a service instance. (Good for single resource or independent identitites)
-- **User-assigned**: You can create a managed identity as a standalone Azure resource. Create a user-assigned managed identity and assign it to one or more instances of an Azure service. A user-assigned identity is managed separately from the resources that use it. (good for multiple resources with same identity or need pre-authorization)
+- **System-assigned**: Some Azure services allow you to enable a managed identity directly on a service instance. (Good for **single resource** or independent identitites)
+- **User-assigned**: You can create a managed identity as a standalone Azure resource. Create a user-assigned managed identity and assign it to one or more instances of an Azure service. A user-assigned identity is managed separately from the resources that use it. (good for **multiple resources** with same identity or need pre-authorization)
+
+User-assigned managed identities automate credential rotation and can be applied to multiple resources. Service principals depend on secrets that expire and do not have automatic credential rotation.
 
 Best way to store secrets is Azure KeyVault (Secrets, Keys, Certificates). Azure Key Vault can manage secrets, (encryption) keys and certificates (TLS). Standard tier lets you encrypt your data with a software key. Premium tier offers hardware security module (HSM)-protected keys.
+
+Key Vault Premium is fully managed and FIPS 140-2 Level 2. Key Vault Standard is not FIPS 140-2 Level 2.
 
 Data Protection for KeyVault:
 
@@ -168,6 +173,8 @@ Data Protection for KeyVault:
 Permissions can be Vault-based or Azure RBAC
 
 Grant access to resources on a need-to-know-basis. Also classify data based on its type, sensitivity, and potential risk. Assign a confidentiality level for each. Example - a customer service representative may have a legitimate need to access customer data to resolve customer issues, a finance employee who creates invoices not.
+
+Sync changes between OnPrem AD and Entra Azure instances via *Entra Connect*. It is designed to sync users and devices between Microsoft Entra ID based domains and AD DS domains.
 
 # Data Solutions
 
@@ -199,8 +206,8 @@ The Azure Storage platform includes the following data services:
 Performance Comparison:
 
 - Azure Blob Storage: Up to 20,000 IOPS, up to 15 GiB/s throughput
-- Azure Files: Up to 100,000 IOPS, up to 10 GiB/s throughput
-- Azure NetApp Files: Up to 460,000 IOPS, up to 4.5 GiB/s throughput for regular volumes, up to 10 GiB/s throughput for large volumes
+- Azure Files: Up to 100,000 IOPS, up to 10 GiB/s throughput, supports NFS and SMB but no interoperability
+- Azure NetApp Files: Up to 460,000 IOPS, up to 4.5 GiB/s throughput for regular volumes, up to 10 GiB/s throughput for large volumes, concurrent support and interoperability between SMB and NFS
 
 Blob Storage supports NFS 3.0/REST/Data Lake Storage Gen2 protocol but not SMB.
 
@@ -221,7 +228,6 @@ Blob also enables Locking (Immutable for legal/time-based holds). Immutable stor
 
 - [**Time-based retention policies**](https://learn.microsoft.com/en-us/azure/storage/blobs/immutable-time-based-retention-policy-overview "https://learn.microsoft.com/en-us/azure/storage/blobs/immutable-time-based-retention-policy-overview") let users set policies to store data for a specified interval. When a time-based retention policy is in place, objects can be created and read, but not modified or deleted. After the retention period has expired, objects can be deleted, but not overwritten. The Hot, Cool, and Archive access tiers support immutable storage by using time-retention policies.
 - [**Legal hold policies**](https://learn.microsoft.com/en-us/azure/storage/blobs/immutable-legal-hold-overview "https://learn.microsoft.com/en-us/azure/storage/blobs/immutable-legal-hold-overview") store immutable data until the legal hold is explicitly cleared. When a legal hold is set, objects can be created and read, but not modified or deleted. Premium Blob Storage uses legal holds to support immutable storage.
-
 
 Azure File Sync can replicate between online and offline file shares, also enables tiering (e.g. if capacity is 80% certain rules can be applied) and local caching of Azure Files on-premise. Azure File Sync enables you to centralize your organization's file shares in Azure Files, while keeping the flexibility, performance, and compatibility of an on-premises file server. You can also use Azure File Sync to cache Azure file shares on Windows Server computers for fast access close to where the data is accessed. You can use any protocol that's available on Windows Server to access your data locally, including SMB, NFS, and FTPS.
 
@@ -253,7 +259,7 @@ RA: Read access only
 
 Managed Disk: Page Blob for VMs, AKS, can be HDD, SSD, Premium and Ultra SSD
 
-Azure managed disk max capacity of 32,767 GB
+Azure managed disk has max capacity of 32.767 GB.
 
 Premium SSD enables me to set custom performance (bursting), disks can also be increased in capacity but not decreased
 
@@ -264,7 +270,6 @@ Three encryption options:
 - [**Azure Disk Encryption (ADE)**](https://learn.microsoft.com/en-us/azure/virtual-machines/linux/disk-encryption-overview "https://learn.microsoft.com/en-us/azure/virtual-machines/linux/disk-encryption-overview") encrypts the VM's virtual hard disks (VHDs). If VHD is protected with ADE, the disk image is accessible only by the VM that owns the disk.
 - **Server-Side Encryption (SSE)** is performed on the physical disks in the data center. If someone directly accesses the physical disk, the data will be encrypted. When the data is accessed from the disk, it's decrypted and loaded into memory. This form of encryption is also referred to as encryption at rest or Azure Storage encryption.
 - **Encryption at host** ensures that data stored on the VM host is encrypted at rest and flows encrypted to the Storage service. Disks with encryption at host enabled aren't encrypted with SSE. Instead, the server hosting your VM provides the encryption for your data, and that encrypted data flows into Azure Storage.
-
 
 Storage Account key access can be disabled, alternative would be Shared Access Signature (signed with Access key), another option RBAC data. A Shared access signature is a string that contains a security token that can be attached to a URI. Use a shared access signature to delegate access to storage objects and specify constraints, such as the permissions and the time range of access.
 
@@ -293,6 +298,7 @@ Azure SQL DB:
 - Autoscale enabled
 - Supports active geo-replication
 - Supports autofailover groups
+- Columnstore indexing supported in tiers S3 & Premium
 - Service Tiers available: General purpose (1 node), Business Critical (several nodes), Hyperscale (Sharding with page servers)
 
 Azure SQL Managed Instance
@@ -310,6 +316,8 @@ Pricing Options:
 - **vCore**: A vCore is a virtual core. You choose the number of virtual cores and have greater control over your compute costs. This option supports the Azure Hybrid Benefit for SQL Server and reserved capacity (pay in advance). Generally recommended by Microsoft.
 - **DTU**: A DTU (Database Transaction Unit) is a combined measure of compute, storage, and I/O resources. The DTU option is a simple, preconfigured purchase option. This option isn't available for Azure SQL Managed Instance.
 - **Serverless**: A compute tier for single databases in SQL Database. The serverless model automatically scales compute, based on workload demand, and bills only for the amount of compute used.
+
+vCore-based with serverless compute stops the database service when it is not in use. DTU-based and vCore-based with provisioned compute do not scale down automatically.
 
 Geo-restore allows you to recover from a geographic disaster when you cannot access your database or backups in the primary region. It creates a new database on any existing server or managed instance, in any Azure region.
 
@@ -344,13 +352,15 @@ SQL Server HADR (High Availability and disaster recovery)) features:
 - Always On Availability Group (AG): Database level (install + data)
 - Log Shipping: Database level (install + data)
 
-Cluster mechanism is  Windows Server Failover Cluster (WSFC) of Windows and Pacemaker (Linux). 
+Cluster mechanism is Windows Server Failover Cluster (WSFC) of Windows and Pacemaker (Linux). 
 
 **FCI failover** is full stop & start. To ensure another node can access the database, FCIs require some form of shared storage. For Windows Server-based architectures, this can be achieved via an Azure Premium File Share, iSCSI, Azure Shared Disk, Storage Spaces Direct (S2D), or a supported third-party solution like SIOS DataKeeper. Until AGs were introduced, FCIs were the most popular way to implement SQL Server high availability.
 
 **Always On Availability Group:** The biggest difference between an FCI and an AG is that AGs provide database-level protection. The primary replica is the instance participating in an AG that contains the read/write databases. A secondary replica is where the primary sends transactions over the log transport to keep it synchronized. Data movement between a primary replica can be synchronous or asynchronous. AGs can have a quicker failover time compared to an FCI, which is one reason they are attractive. The storage is local to each replica. 
 
 The **log shipping** mechanism is simple: first, take a full backup of the source database on the primary server, restore it in a loading state (STANDBY or NORECOVERY) on another instance known as a secondary server or warm standby. This new copy of the database is known as a secondary database. An automated process built into SQL Server will then automatically backup the primary database’s transaction log, copy the backup to the standby server, and finally, restore the backup onto the standby.
+
+LTR (Long Term Retention) is required to store a backup for more than 35 days.
 
 Azure SQL Edge
 
@@ -371,13 +381,15 @@ Azure Data Factory: ETL data integration process to orchestrate data movement a
 
 Azure Data Factory also supports hybrid scenarios (combining Cloud data with data from On-Premise systems).
 
+Data Factory is usually used to run data integration pipelines but not for real-time analytics.
+
 Pipelines provide a way to encapsulate one or more actions that can be applied to data as it is transferred from one data store to another. It enables you to transfer data from one store to another and apply transformations to the data at scheduled intervals.  Pipelines can be in Azure but also onPremise (feeds data into Data Factory).
 
 Azure Data Lake Storage Gen2: supports HDFS, full hierarchy, POSIX. It stores any type of data by using the data's native format. Primarily designed for HDFS (Hadoop Distributed File System). Differentiation to Blob Storage:
 
 ![](images/data-lake-storage-comparison.png)
 
-Azure Stream Analytics is a fully managed (PaaS offering), real-time analytics and complex event-processing engine. It offers the possibility to perform real-time analytics on multiple streams of data from sources like IoT device data, sensors, clickstreams, and social media feeds. Supports data formats CSV, JSON, and Avro. As ingest Azure Event Hubs (including Azure Event Hubs from Apache Kafka), Azure IoT Hub, or Azure Blob Storage are supported. It is based on SQL to filter, sort, aggregate, and join streaming data over a period. For ultra-low latency analytics, run Stream Analytics on IoT Edge or Azure Stack.
+Azure Stream Analytics is a fully managed (PaaS offering) data warehousing solution for real-time analytics and complex event-processing engine. It offers the possibility to perform real-time analytics on multiple streams of data from sources like IoT device data, sensors, clickstreams, and social media feeds. Supports data formats CSV, JSON, and Avro. As ingest Azure Event Hubs (including Azure Event Hubs from Apache Kafka), Azure IoT Hub, or Azure Blob Storage are supported. It is based on SQL to filter, sort, aggregate, and join streaming data over a period. For ultra-low latency analytics, run Stream Analytics on IoT Edge or Azure Stack.
 
 Data security needs data classification (Azure Purview), data at rest (transparent data encryption), in transit, in use (dynamic data masking e.g. for last digits of credit card, always encrypting even on client side)
 
@@ -399,7 +411,7 @@ Components of Azure Synapse:
 - **Azure Synapse SQL pool**: Synapse SQL offers both serverless and dedicated resource models to work with a node-based architecture. For predictable performance and cost, you can create dedicated SQL pools. For irregular or unplanned workloads, you can use the always-available, serverless SQL endpoint.
 - **Azure Synapse Spark pool**: This pool is a cluster of servers that run Apache Spark to process data. You write your data processing logic by using one of the four supported languages: Python, Scala, SQL, and C# (via .NET for Apache Spark). Apache Spark for Azure Synapse integrates Apache Spark (the open source big data engine used for data preparation, data engineering, ETL, and machine learning).
 - **Azure Synapse Pipelines**: Azure Synapse Pipelines applies the capabilities of Azure Data Factory. Pipelines are the cloud-based ETL and data integration service that allows you to create data-driven workflows for orchestrating data movement and transforming data at scale. You can include activities that transform the data as it's transferred, or you can combine data from multiple sources together.
-- **Azure Synapse Link**: This component allows you to connect to Azure Cosmos DB. You can use it to perform near real-time analytics over the operational data stored in an Azure Cosmos DB database.
+- **Azure Synapse Link**: This component allows you to connect to Azure Cosmos DB. You can use it to perform near real-time analytics over the operational data stored in an Azure Cosmos DB database. Also needed to enable connectivity to other sources (e.g. MongoDB).
 - **Azure Synapse Studio**: This element is a web-based IDE that can be used centrally to work with all capabilities of Azure Synapse Analytics. You can use Azure Synapse Studio to create SQL and Spark pools, define and run pipelines, and configure links to external data sources.
 
 Typical analytical scenarios are questions like "what now", "why", "what future" and "what action".
@@ -423,14 +435,32 @@ Azure Batch: Managed service to run large-scale parallel and high-performance co
 
 Azure Container Instances are a fast and simple way to run a container on Azure. Scenarios for using Azure Container Instance include simple applications, task automation, and build jobs. A container group is a collection of containers that get scheduled on the same host machine. The containers in a container group share a lifecycle, resources, local network, and storage volumes.
 
-The Azure Kubernetes Service (AKS) environment is enabled with many features, such as automated updates, self-healing, and easy scaling. AKS supports two auto cluster scaling options. The *horizontal pod autoscaler* watches the resource demand of pods and increases pods to meet demand. The *cluster autoscaler* component watches for pods that can't be scheduled because of node constraints. It automatically scales cluster nodes to deploy scheduled pods.
+The Azure Kubernetes Service (AKS) environment is enabled with many features, such as automated updates, self-healing, and easy scaling. AKS supports two auto cluster scaling options. The horizontal pod autoscaler watches the resource demand of pods and increases pods to meet demand. The cluster autoscaler component watches for pods that can't be scheduled because of node constraints. It automatically scales cluster nodes to deploy scheduled pods.
 
-Azure Functions default timeout is 300 seconds for Consumption Plan functions, and 30 minutes for any other plan.
+Azure Functions default timeout is 300 seconds (5 minutes) for Consumption Plan functions, and 30 minutes for any other plan.
 
 You can use the AppService WebJobs feature to run a program (.exe, Java, PHP, Python, or Node.js) or script (.cmd, .bat, PowerShell, or Bash) in the same context as a web app, API app, or mobile app. They can be scheduled or run by a trigger. WebJobs are often used to run background tasks as part of your application logic.
 
+Only AppService plans Premium V2 and Premium V3 are zone redundant. 
+
+Deployment slots provided by Azure web apps is the fastest method for swapping between deployed environments.
+
+**Messaging**
 
 Pub/Sub: If the sending component in your application expects communication to be processed in a specific way by the destination component, consider implementing messages. If the sender component in your application has no requirements for the destination component, you might implement events rather than messages. In a message-based communication, there's an expectation that both the message sender and receiver complete their tasks.
+
+General comparison
+
+| Feature              | Service Bus                             | Event Grid                          | Event Hub                                  | Azure Queues                 |
+|----------------------|-----------------------------------------|-------------------------------------|--------------------------------------------|------------------------------|
+| **General Purpose**  | High-value enterprise messaging (complex integration problems, dead lettering, transactions)        | Highly scalable PubSub event routing with filtering        | High throughput event streaming targeting applications and IoT (telemetry and streaming)           | Simple queue messaging (lower costs)      |
+| **Comm. Mechanism**  | Both push and pull                      | Push (event-driven)                 | Both push and pull (with consumer groups)  | Pull                         |
+| **Protocols**        | AMQP, HTTP, REST                        | HTTP, HTTPS, WebHook                | AMQP, HTTP                                 | HTTP, HTTPS                  |
+| **Message Sizes**    | Up to 1 MB (standard); 100 MB (premium) | Up to 64 KB (events)                | Up to 1 MB per event                       | Up to 64 KB per message      |
+| **Limitations**      | Higher cost, complex setup              | Limited to event handling           | High throughput but limited message size   | Basic features, lower throughput |
+| **Retention**        | Up to 14 days (duplicate detection)     | 24 hours (event delivery)           | Up to 7 days or longer with capture feature | Up to 7 days                 |
+| **Queue Sizes**      | Up to 80 GB (premium)                   | N/A (not a queueing solution)       | Unlimited with retention policies          | Up to 500 TB (storage account limit) |
+| **Message Processing**| FIFO, duplicate detection, sessions    | Event handling, filtering           | Stream processing with partitioning        | FIFO, poison message handling |
 
 Azure Queue Storage: Simple queue, good for audit trails, queue storage can exceed 80 GB / millions of messages
 
@@ -439,7 +469,7 @@ Azure Service Bus is a fully managed enterprise message broker. It supports mess
 - [Azure Service Bus message queues](https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-queues-topics-subscriptions#queues "https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-queues-topics-subscriptions#queues") is a message broker system built on top of a dedicated messaging infrastructure. Like Azure queues, Service Bus holds messages until the target is ready to receive them.
 - [Azure Service Bus publish-subscribe topics](https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-queues-topics-subscriptions#topics-and-subscriptions "https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-queues-topics-subscriptions#topics-and-subscriptions") are like queues but can have multiple subscribers. When a message is sent to a topic, multiple components can be triggered to perform a task.
 
-Azure Service Bus queues provide advanced message handing, and can group messages into a transaction.
+Azure Service Bus queues provide advanced message handing, and can group messages into a transaction. Service Bus uses a publication/subscription method for messages with polling.
 
 Azure Event Hubs is a fully managed, big data streaming platform and event ingestion service. It implements a distinct **pull** mode:
 
@@ -462,7 +492,7 @@ Azure API Management is a cloud service platform that lets you publish, secure, 
 
 # Networking
 
-Azure virtual network (VNet) allows you to create multiple isolated virtual networks. When you set up a virtual network, you define a private IP address space by using either public or private IP address ranges. The IP range only exists within the virtual network and isn't internet routable. For name resolution, you can use the name resolution service that's built into Azure. You also can configure the virtual network to use either an internal or an external DNS server. You can link virtual networks together by using virtual network peering. Peering allows two virtual networks to connect directly to each other. Network traffic between peered networks is private, and travels on the Microsoft backbone network, never entering the public internet. User-defined routes (UDR) allow you to control the routing tables between subnets within a virtual network or between virtual networks. This allows for greater control over network traffic flow.
+Azure virtual network (VNet) allows you to create multiple isolated virtual networks. When you set up a virtual network, you define a private IP address space by using either public or private IP address ranges. The IP range only exists within the virtual network and isn't internet routable. For name resolution, you can use the name resolution service that's built into Azure. You also can configure the virtual network to use either an internal or an external DNS server. You can link virtual networks together by using virtual network peering. Peering allows two virtual networks to connect directly to each other. Network traffic between peered networks is private, and travels on the Microsoft backbone network, never entering the public internet. User-defined routes (UDR) allow you to control the routing tables between subnets within a virtual network or between virtual networks. This allows for greater control over network traffic flow. UDRs allow you to overwrite Azure default routes and route e.g. outbound traffic to a custom solution.
 
 A virtual network can't span multiple regions. Applications can of course be grouped into separate virtual networks and connect via peering.
 
@@ -560,11 +590,15 @@ Azure Virtual WAN is a networking service that provides optimized and automated 
 
 Azure DNS uses anycast networking, so each DNS query is answered by the closest available DNS server to provide fast performance and high availability for your domain. Azure DNS also supports private DNS domains. This feature allows you to use your own custom domain names in your private virtua l networks, rather than being stuck with the Azure-provided names. Azure DNS also supports alias record sets. You can use an alias record set to refer to an Azure resource, such as an Azure public IP address, an Azure Traffic Manager profile, or an Azure Content Delivery Network (CDN) endpoint. You can't use Azure DNS to buy a domain name. 
 
-Azure Front Door lets you define, manage, and monitor the global routing for your web traffic by optimizing for best performance and instant global failover for high availability.
+Azure Front Door lets you define, manage, and monitor the global routing for your web traffic by optimizing for best performance and instant global failover for high availability. Front Door can
 
-Azure Traffic Manager is a DNS-based traffic load balancer that enables you to distribute traffic optimally to services across global Azure regions, while providing high availability and responsiveness. Traffic Manager provides a range of traffic-routing methods to distribute traffic such as priority, weighted, performance, geographic, multi-value, and subnet.
+- cache static objects
+- terminate SSL connections as close to the end user as possible
+- route traffic to the lowest latency Azure region hosting the web app
 
-Azure Load Balancer provides high-performance, low-latency Layer 4 (Transport layer) load-balancing for all UDP and TCP protocols. To provide zonal fault tolerance, you can deploy a standard Azure Load Balancer instance with internet-facing workloads or application tiers.
+Azure Traffic Manager is a DNS-based traffic load balancer that enables you to distribute traffic optimally to services across global Azure regions, while providing high availability and responsiveness. Traffic Manager provides a range of traffic-routing methods to distribute traffic such as priority, weighted, performance, geographic, multi-value, and subnet. Traffic Manager provides failover and geographic routing but can't do caching or SSL termination.
+
+Azure Load Balancer provides high-performance, low-latency Layer 4 (Transport layer) load-balancing for all UDP and TCP protocols. To provide zonal fault tolerance (not regional!), you can deploy a standard Azure Load Balancer instance with internet-facing workloads or application tiers.
 
 Azure Application Gateway is a web traffic load balancer that enables you to manage traffic to your web applications. There are two primary methods of routing traffic:
 
@@ -585,10 +619,6 @@ Azure Bastion is a fully platform-managed PaaS service that you implement inside
 
 JIT (just in time) network access lets you lock down inbound traffic to your virtual machines.
 
-
-
-
-
 # Operational Excellence 
 
 Enable faster development (DevOps), incremental changes/business value, insights into what is going on
@@ -596,6 +626,8 @@ Enable faster development (DevOps), incremental changes/business value, insights
 IaC can be declarative (define target state via ARM JSON, Bicep, Terraform, ...) or imperative (Shell, Az CLI). IaC code should be treated the same way as application code (security, coding standards etc.). It should be considered to have app & IaC code in the same repo.
 
 Azure Resource Manager (ARM) templates are files that define the infrastructure and configuration for your deployment (IaC). There are two template formats, JSON and Bicep. Bicep is an ARM template language that's used to declaratively deploy Azure resources. Bicep is a domain-specific language, which means that it's designed for a specific scenario or domain. Bicep CLI can decompile any template into a Bicep template.
+
+ARM templates allow you to save a template in the portal for reuse and users can specify values for parameters.
 
 Azure Automation is Cloud-based automation and configuration for...
 
@@ -613,7 +645,7 @@ Performance Efficiency: Consumption matches load (Autoscale in and out)
 
 It is important to monitor both real and synthetic transactions to ensure that performance during real-world usage is acceptable.
 
-Proxy Placement Group (PPG): reduce latency between resources in a region
+Proxy Placement Group (PPG): reduce latency between resources in a region (VMs are located closely together).
 
 For internet delivery a CDN will help (also possible via FrontDoor)
 
@@ -636,7 +668,7 @@ Azure Monitor can capture health and performance information from your Azure vir
 - Health metrics
 - Autoscale metrics
 
-The Service Map feature of Azure Monitor lets you automatically discover applications and their components in your on-premises environment.  Use this feature to identify dependencies when determining what data to migrate. Service Map requires another agent to be installed on the source environment virtual machines.
+The Service Map feature of Azure Monitor lets you automatically discover applications and their components in your on-premises environment. Use this feature to identify dependencies when determining what data to migrate. Service Map requires another agent to be installed on the source environment virtual machines.
 
 To use Azure Service Map, you need the following configuration:
 
@@ -654,16 +686,26 @@ Workbooks provide a flexible canvas for data analysis and the creation of rich v
 
 Azure Insights:
 
-- Azure insights provide a customized monitoring experience for particular applications and services.
+- can monitor the availability, performance, and usage of your web application and services
 - Azure insights collect and analyze both logs and metrics.
 - Many insights are provided as features of Azure Monitor (e.g. Application, Container, Network, VM, CosmosDB, Storage, ...)
 
 Azure Data Explorer:
 
-- Azure Data Explorer is a fast and highly scalable data exploration service for log and telemetry data.
-- Azure Data Explorer helps you handle multiple data streams, so you can collect, store, and analyze your data from all resources.
-- Analyze large volumes of diverse data from any data source, such as websites, applications, IoT devices, and more.
-- Use Azure Data Explorer for diagnostics, monitoring, reporting, machine learning, and other analytics tasks.
+- provides comprehensive monitoring of your clusters
+- fast and highly scalable data exploration service for log and telemetry data
+- helps you handle multiple data streams, so you can collect, store, and analyze your data from all resources
+- Analyze large volumes of diverse data from any data source, such as websites, applications, IoT devices, and more
+- Use Azure Data Explorer for diagnostics, monitoring, reporting, machine learning, and other analytics tasks
+
+Container Insights:
+
+- monitors the performance of container workloads that are deployed to managed Kubernetes clusters hosted on AKS
+
+Activity Logs:
+
+- platform log that provides insight into subscription-level events
+- includes information like when a resource is modified or a virtual machine is started
 
 Log destinations (configure at Diagnostic Settings):
 
@@ -672,6 +714,8 @@ Log destinations (configure at Diagnostic Settings):
 - Storage Account (cheap)
 
 Alert rules: triggered by Metrics, Logs, Activity Log, initializes Action Groups that can send SMS, call API etc.
+
+When ingesting more than 500 GB of logs per day, a dedicated cluster should be provisioned, ideally in the same region as the resource being monitored.
 
 # Availability
 
@@ -701,7 +745,6 @@ Availability Sets will compensate Rack/Server failures but not Datacenter failur
 - **Update domain**: The update domain groups VMs that can be rebooted at the same time. This allows you to apply updates while knowing that only one update domain grouping will be offline at a time. All of the machines in one update domain will be updated. An update group going through the update process is given a 30-minute time to recover before maintenance on the next update domain starts.
 - **Fault domain**: The fault domain groups your VMs by common power source and network switch. By default, an availability set will split your VMs across up to three fault domains. This helps protect against a physical power or networking failure by having VMs in different fault domains (thus being connected to different power and networking resources).
 
-
 Azure Site Recovery: define how your virtual machines are failed over, and the order in which they're restarted after successful failover. This also works with On-Premise resources / in hybrid scenarios. Azure Site Recovery is designed to provide (continuous) replication to a secondary region (e.g. for VMs). Site recovery offers
 
 - **Site Recovery service**: Site Recovery helps ensure business continuity by keeping business apps and workloads running during outages. Site Recovery [replicates](https://learn.microsoft.com/en-us/azure/site-recovery/azure-to-azure-quickstart "https://learn.microsoft.com/en-us/azure/site-recovery/azure-to-azure-quickstart") workloads running on physical and virtual machines (VMs) from a primary site to a secondary location. When an outage occurs at your primary site, you fail over to a secondary location, and access apps from there. After the primary location is running again, you can fail back to it.
@@ -718,7 +761,7 @@ MTBF (Mean Time Between Failures) is how long a component can reasonably expect 
 
 ## Backup
 
-Azure Backup are multiple Services e.g. to copy VM content into Backup Vault but it makes more sense to use it as an orchestrator
+Azure Backup are multiple Services e.g. to copy VM content into Backup Vault but it makes more sense to use it as an orchestrator. It can be used to back up entire virtual machines running Windows or Linux.
 
 Azure Blob Storage backup and recovery:
 
@@ -821,6 +864,8 @@ Through experimentation mechanisms, such as A/B testing and developing proofs of
 
 # Migration
 
+The three migration phases for Microsoft Cloud Adoption Framework for Azure are assess, deploy, and release.
+
 Key types of migration:
 
 - Rehost: basically L&S, take whats there and run in Cloud
@@ -847,3 +892,5 @@ Azure Database Migration Service can migrate on-premises databases, including:�
 SQL Server DBs can be migrated online (continuous sync of data, no downtime) and offline (cut-off with downtime)
 
 The Azure Storage Migration Service can help you migrate unstructured data stored in on-premises file servers to Azure Files and Azure-hosted virtual machines. The Storage Migration Service can migrate one or more servers to newer hardware or virtual machines. 
+
+Azure Resource Mover is a tool to move existing resources between Azure subscriptions.
