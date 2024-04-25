@@ -102,6 +102,8 @@ Microsoft Entra Domain Services is a service that provides managed domain servic
 
 With External Identities, external users can "bring their own identities." Whether they have a corporate or government-issued digital identity, or an unmanaged social identity like Google or Facebook, they can use their own credentials to sign in. The external user’s identity provider manages their identity, and you manage access to your apps with Microsoft Entra ID or Azure AD B2C to keep your resources protected. 
 
+Application Proxy allows on-premises applications to use tokens from Microsoft Entra ID.
+
 **Entra B2B**:
 
 - With Microsoft Entra B2B, the external partner uses their own identity management solution. Microsoft Entra ID isn't required.
@@ -170,11 +172,7 @@ Data Protection for KeyVault:
 - **Soft delete** is designed to prevent accidental deletion of your key vault and keys, secrets, and certificates stored inside key vault. Think of soft-delete like a recycle bin.
 - **Purge protection** Purge protection is designed to prevent the deletion of your key vault, keys, secrets, and certificates by a malicious insider. Think of this as a recycle bin with a time based lock. You can recover items at any point during the configurable retention period.
 
-Permissions can be Vault-based or Azure RBAC
-
-Grant access to resources on a need-to-know-basis. Also classify data based on its type, sensitivity, and potential risk. Assign a confidentiality level for each. Example - a customer service representative may have a legitimate need to access customer data to resolve customer issues, a finance employee who creates invoices not.
-
-Sync changes between OnPrem AD and Entra Azure instances via *Entra Connect*. It is designed to sync users and devices between Microsoft Entra ID based domains and AD DS domains.
+Sync changes between OnPrem AD and Entra Azure instances via **Entra Connect** that basically syncs password hashes. It is designed to sync users and devices between Microsoft Entra ID based domains and AD DS domains.
 
 # Data Solutions
 
@@ -285,9 +283,9 @@ Azure Table storage stores large amounts of structured data. Azure tables are a 
 
 ## SQL & Analytics
 
-Transactional databases are often called *online transaction processing (OLTP)* systems. OLTP systems commonly support many users, have quick response times, and handle large volumes of data. They also are highly available, which means they have minimal downtime. OLTP systems typically handle small transactions or relatively simple transactions. An example of an Azure service that supports OLTP is Azure SQL Database.
+Transactional databases are often called **online transaction processing (OLTP)** systems. OLTP systems commonly support many users, have quick response times, and handle large volumes of data. They also are highly available, which means they have minimal downtime. OLTP systems typically handle small transactions or relatively simple transactions. An example of an Azure service that supports OLTP is Azure SQL Database.
 
-*Online analytical processing (OLAP)* systems commonly support fewer users, have longer response times, can be less available, and typically handle large transactions or complex transactions. An example of an Azure service that supports OLAP is Azure Analysis Services.
+**Online analytical processing (OLAP)** systems commonly support fewer users, have longer response times, can be less available, and typically handle large transactions or complex transactions. An example of an Azure service that supports OLAP is Azure Analysis Services.
 
 A hot data path is  typically used for processing or displaying data in real time (e.g. real-time alerting, streaming). A warm data path supports analyzing data as it flows through the system (recent subset of data for analytic processing). A cold data path can help to calculate utilization over some time period in the past and create/identify different pivots and aggregations (long term analytics).
 
@@ -307,6 +305,7 @@ Azure SQL Managed Instance
 - Supports autofailover groups (but not geo-replication)
 - supports more features compared to Az SQL DB (e.g. CLR, Cross-database transactions), good for migrating onPremise workloads to VMs
 - uses vCores mode, max CPU/Storage can be defined
+- deploys own Virtual Network
 - ideal for customers interested in instance-scoped features, such as SQL Server Agent, Common language runtime (CLR), Database Mail, Distributed transactions, and Machine Learning Services
 
 Both SQL Database and SQL Managed Instance use SQL Server technology to create full backups every week, differential backups (=increments) every 12-24 hours, and transaction log backups (to restore transaction logs up to a specific time, which includes the moment before data was mistakenly deleted) every 5 to 10 minutes.
@@ -345,20 +344,21 @@ Read Scale Out useful if there's both transactions (Read+write) and Analytics (r
 SQL Server in IaaS VM
 
 - needs patching, backup > full responsibility
+- may be needed for sophisticated features like SSIS (SQL Server Integration Services for data integration) which are not supported my SQL DB & SQL Managed Instance. SSIS can also be deployed as integration runtime to Data Factory.
 
-SQL Server HADR (High Availability and disaster recovery)) features:
+SQL Server HADR (High Availability and disaster recovery) features:
 
 - Always On Failover Cluster Instance (FCI): Instance level (install)
 - Always On Availability Group (AG): Database level (install + data)
-- Log Shipping: Database level (install + data)
+- Log Shipping: Database level (install + data), easy to administrate & deploy
+
+**FCI failover** is full stop & start of the entire SQL instance (DB, settings, jobs, VM, ...). To ensure another node can access the database, FCIs require some form of shared storage (no data replication). For Windows Server-based architectures, this can be achieved via an Azure Premium File Share, iSCSI, Azure Shared Disk, Storage Spaces Direct (S2D), or a supported third-party solution like SIOS DataKeeper. Typically used within a datacenter. Until AGs were introduced, FCIs were the most popular way to implement SQL Server high availability.
+
+**Always On Availability Group:** The biggest difference between an FCI and an AG is that AGs provide database-level protection. The primary replica is the instance participating in an AG that contains the read/write databases. A secondary replica is where the primary sends transactions over the log transport to keep it synchronized. Data movement between a primary replica can be synchronous or asynchronous. AGs can have a quicker failover time compared to an FCI, which is one reason they are attractive. Typically used for geo-redundancy. The storage is local to each replica. 
+
+The **Log Shipping** mechanism is simple: first, take a full backup of the source database on the primary server, restore it in a loading state (STANDBY or NORECOVERY) on another instance known as a secondary server or warm standby. This new copy of the database is known as a secondary database. An automated process built into SQL Server will then automatically backup the primary database’s transaction log, copy the backup to the standby server, and finally, restore the backup onto the standby. Generally higher RTO and RPO compared to AGs.
 
 Cluster mechanism is Windows Server Failover Cluster (WSFC) of Windows and Pacemaker (Linux). 
-
-**FCI failover** is full stop & start. To ensure another node can access the database, FCIs require some form of shared storage. For Windows Server-based architectures, this can be achieved via an Azure Premium File Share, iSCSI, Azure Shared Disk, Storage Spaces Direct (S2D), or a supported third-party solution like SIOS DataKeeper. Until AGs were introduced, FCIs were the most popular way to implement SQL Server high availability.
-
-**Always On Availability Group:** The biggest difference between an FCI and an AG is that AGs provide database-level protection. The primary replica is the instance participating in an AG that contains the read/write databases. A secondary replica is where the primary sends transactions over the log transport to keep it synchronized. Data movement between a primary replica can be synchronous or asynchronous. AGs can have a quicker failover time compared to an FCI, which is one reason they are attractive. The storage is local to each replica. 
-
-The **log shipping** mechanism is simple: first, take a full backup of the source database on the primary server, restore it in a loading state (STANDBY or NORECOVERY) on another instance known as a secondary server or warm standby. This new copy of the database is known as a secondary database. An automated process built into SQL Server will then automatically backup the primary database’s transaction log, copy the backup to the standby server, and finally, restore the backup onto the standby.
 
 LTR (Long Term Retention) is required to store a backup for more than 35 days.
 
@@ -385,7 +385,7 @@ Data Factory is usually used to run data integration pipelines but not for real-
 
 Pipelines provide a way to encapsulate one or more actions that can be applied to data as it is transferred from one data store to another. It enables you to transfer data from one store to another and apply transformations to the data at scheduled intervals.  Pipelines can be in Azure but also onPremise (feeds data into Data Factory).
 
-Azure Data Lake Storage Gen2: supports HDFS, full hierarchy, POSIX. It stores any type of data by using the data's native format. Primarily designed for HDFS (Hadoop Distributed File System). Differentiation to Blob Storage:
+Azure Data Lake Storage Gen2: supports HDFS, full hierarchy, POSIX. It stores any type of data by using the data's native format. It is optimized for unstructured data and provides geo-redundancy. Primarily designed for HDFS (Hadoop Distributed File System). Differentiation to Blob Storage:
 
 ![](images/data-lake-storage-comparison.png)
 
@@ -420,11 +420,13 @@ Typical analytical scenarios are questions like "what now", "why", "what future"
 
 ![](images/compute-selection-guideline.png)
 
-Compute-optimized VMs for Medium traffic web servers, Network appliances, Batch processes, Application servers
+Compute-optimized VMs (F*) for Medium traffic web servers, Network appliances, Batch processes, Application servers
 
-Memory-optimized VMs are great for relational database servers, medium to large caches, and in-memory analytics.
+Memory-optimized VMs (D*, E*) are great for relational database servers, medium to large caches, and in-memory analytics.
 
-Storage-optimized VMs for VMs running databases
+Storage-optimized VMs (L*) for VMs running databases
+
+GPU-optimized VMs are N*.
 
 Azure Batch: Managed service to run large-scale parallel and high-performance computing (HPC) applications. It is based on VMs and...
 
@@ -436,6 +438,8 @@ Azure Batch: Managed service to run large-scale parallel and high-performance co
 Azure Container Instances are a fast and simple way to run a container on Azure. Scenarios for using Azure Container Instance include simple applications, task automation, and build jobs. A container group is a collection of containers that get scheduled on the same host machine. The containers in a container group share a lifecycle, resources, local network, and storage volumes.
 
 The Azure Kubernetes Service (AKS) environment is enabled with many features, such as automated updates, self-healing, and easy scaling. AKS supports two auto cluster scaling options. The horizontal pod autoscaler watches the resource demand of pods and increases pods to meet demand. The cluster autoscaler component watches for pods that can't be scheduled because of node constraints. It automatically scales cluster nodes to deploy scheduled pods.
+
+In AKS the Contributor role can change roles and bindings.
 
 Azure Functions default timeout is 300 seconds (5 minutes) for Consumption Plan functions, and 30 minutes for any other plan.
 
@@ -494,7 +498,9 @@ Azure API Management is a cloud service platform that lets you publish, secure, 
 
 Azure virtual network (VNet) allows you to create multiple isolated virtual networks. When you set up a virtual network, you define a private IP address space by using either public or private IP address ranges. The IP range only exists within the virtual network and isn't internet routable. For name resolution, you can use the name resolution service that's built into Azure. You also can configure the virtual network to use either an internal or an external DNS server. You can link virtual networks together by using virtual network peering. Peering allows two virtual networks to connect directly to each other. Network traffic between peered networks is private, and travels on the Microsoft backbone network, never entering the public internet. User-defined routes (UDR) allow you to control the routing tables between subnets within a virtual network or between virtual networks. This allows for greater control over network traffic flow. UDRs allow you to overwrite Azure default routes and route e.g. outbound traffic to a custom solution.
 
-A virtual network can't span multiple regions. Applications can of course be grouped into separate virtual networks and connect via peering.
+A virtual network can't span multiple regions. Virtual networks can span resource groups but not subscriptions.
+
+Applications can of course be grouped into separate virtual networks and connect via peering.
 
 By default, Azure routes traffic between
 
@@ -529,6 +535,8 @@ Azure virtual networks enable you to filter traffic between subnets by using the
 
 - Network security groups are Azure resources that can contain multiple inbound and outbound security rules. You can define these rules to allow or block traffic, based on factors such as source and destination IP address, port, and protocol.
 - Network virtual appliances are specialized VMs that can be compared to a hardened network appliance. A network virtual appliance carries out a particular network function, such as running a firewall or performing wide area network (WAN) optimization.
+
+NSG (Network Security Groups) flow logs are used to log IP traffic information.
 
 A hub and spoke network topology isolates workloads while sharing services, such as identity and security. The hub is a virtual network in Azure that acts as a central point of connectivity to your on-premises network. Spokes are virtual networks that peer with the hub. It can help to centralize common services, such as connections to on-premises networks, firewalls, and isolation between virtual networks. The hub virtual network provides a central point of connectivity to on-premises networks, and a place to host services used by workloads hosted in spoke virtual networks.
 
@@ -598,16 +606,16 @@ Azure Front Door lets you define, manage, and monitor the global routing for you
 
 Azure Traffic Manager is a DNS-based traffic load balancer that enables you to distribute traffic optimally to services across global Azure regions, while providing high availability and responsiveness. Traffic Manager provides a range of traffic-routing methods to distribute traffic such as priority, weighted, performance, geographic, multi-value, and subnet. Traffic Manager provides failover and geographic routing but can't do caching or SSL termination.
 
-Azure Load Balancer provides high-performance, low-latency Layer 4 (Transport layer) load-balancing for all UDP and TCP protocols. To provide zonal fault tolerance (not regional!), you can deploy a standard Azure Load Balancer instance with internet-facing workloads or application tiers.
+Azure Load Balancer provides high-performance, low-latency Layer 4 (Transport layer) load-balancing for all UDP and TCP protocols. To provide zonal fault tolerance (not regional!), you can deploy a standard Azure Load Balancer instance with internet-facing workloads or application tiers.
 
-Azure Application Gateway is a web traffic load balancer that enables you to manage traffic to your web applications. There are two primary methods of routing traffic:
+Azure Application Gateway is a web traffic load balancer (+firewall and SSL termination) that enables you to manage traffic to your web applications (no focus on APIs). There are two primary methods of routing traffic:
 
 - Path-based routing: Send requests with different URL paths to a different pool of back-end servers
 - Multiple-site routing: Support tenants with virtual machines or other resources that host a web application
 
 Azure DDoS Protection provides countermeasures against the most sophisticated DDoS threats. The service provides enhanced DDoS mitigation capabilities for your application and resources deployed in your virtual networks.
 
-Azure Private Link enables you to access Azure PaaS services (such as Azure Storage and SQL Database) and Azure hosted customer-owned/partner services over a private endpoint in your virtual network. Traffic between your virtual network and the service travels the Microsoft backbone network. Exposing your service to the public internet is no longer necessary.
+Azure Private Link enables you to access Azure PaaS services (such as Azure Storage and SQL Database) and Azure hosted customer-owned/partner services over a private endpoint in your virtual network. Traffic between your virtual network and the service travels the Microsoft backbone network. Exposing your service to the public internet is no longer necessary. Private Link is accessible from other Azure tenants and also (with isolation) from the public internet.
 
 Azure Firewall is a managed, cloud-based network security service that protects your Azure Virtual Network resources. Azure Firewall can filter HTTP(S) traffic from Azure to on-premises and outbound to the internet.
 
@@ -684,7 +692,7 @@ Subscription have Activity Logs, Resources have Metrics & Logs (need to be confi
 
 Workbooks provide a flexible canvas for data analysis and the creation of rich visual reports within the Azure portal. Customers use Workbooks to explore the usage of an app, to do root cause analysis, put together an operational playbook, and many other tasks
 
-Azure Insights:
+Azure Application Insights:
 
 - can monitor the availability, performance, and usage of your web application and services
 - Azure insights collect and analyze both logs and metrics.
@@ -738,7 +746,7 @@ Azure provides three main options to enhance availability for IaaS deployments:
 
 - Availability Sets: provide uptime against Azure-related maintenance and single points of failure in a single data center. Applications are guaranteed to never run on the same physical server. Can't be combined with AZs.
 - Availability Zones: account for data center-level failure in Azure. A zone is a unique physical location, that is, a data center, within an Azure region.
-- Azure Site Recovery:  replicates a VM from one Azure region to another to create a disaster recovery solution for that VM.
+- Azure Site Recovery: replicates a VM from one Azure region to another to create a disaster recovery solution for that VM.
 
 Availability Sets will compensate Rack/Server failures but not Datacenter failures, AZs do that. Availability sets group VMs in two ways: update domain and fault domain.
 
