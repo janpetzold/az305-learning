@@ -67,9 +67,9 @@ Policy: What can you do (Guardrails)
 RBAC: Who can do it (Identity, Scope, Roles/Actions)
 Budget: How much
 
-RBAC can be set on resource group level. Policies shall be set on Management group level to make sure these are applied for new subscriptions.
+RBAC can be set on resource group level and RBAC roles should be applied at the highest level possible (tenant). Policies shall be set on Management group level to make sure these are applied for new subscriptions.
 
-Azure Policy is a service in Azure that enables you to create, assign, and manage policies to control or audit your resources. These policies enforce different rules over your resource configurations so the configurations stay compliant with corporate standards.
+Azure Policy is a service in Azure that enables you to create, assign, and manage policies to control or audit your resources. These policies enforce different rules over your resource configurations so the configurations stay compliant with corporate standards. Policies can be assigned to Subscriptions, Resource Groups and Management groups. Parent policies must be in the same region as child policies.
 
 Built-In policies include
 
@@ -273,12 +273,6 @@ Sync changes between OnPrem AD and Entra Azure instances via **Entra Connect** t
 
 # Data Solutions
 
-Structured Data: Table with rows and columns,schema
-
-Semi-structured data: Documents like JSON, XML, HTML
-
-Unstructured: Documents, Media
-
 Storage Account: represents a collection of settings like location, replication strategy, and subscription owner. Aspects to consider:
 
 - location
@@ -343,7 +337,7 @@ Blob also enables Locking (Immutable for legal/time-based holds). Immutable stor
 
 Azure File Sync can replicate between online and offline file shares, also enables tiering (e.g. if capacity is 80% certain rules can be applied) and local caching of Azure Files on-premise. Azure File Sync enables you to centralize your organization's file shares in Azure Files, while keeping the flexibility, performance, and compatibility of an on-premises file server. You can also use Azure File Sync to cache Azure file shares on Windows Server computers for fast access close to where the data is accessed. You can use any protocol that's available on Windows Server to access your data locally, including SMB, NFS, and FTPS. 
 
-Azure Files enables selecting between HDD and SSD storage. For storage tiers:
+Azure Files enables selecting between HDD and SSD storage. Four storage tiers:
 
 - **Premium**: File shares are backed by solid-state drives (SSDs) and provide consistent high performance and low latency. Used for the most intensive IO workloads. Suitable workloads include databases, web site hosting, and development environments. Can be used with both Server Message Block (SMB) and Network File System (NFS) protocols.
 - **Transaction optimized**: Used for transaction heavy workloads that don't need the latency offered by premium file shares. File shares are offered on the standard storage hardware backed by hard disk drives (HDDs).
@@ -375,9 +369,9 @@ Managed Disk: Page Blob for VMs, AKS, can be HDD, SSD, Premium and Ultra SSD. A 
 
 Azure managed disk has max capacity of 32.767 GB.
 
-Premium SSD enables me to set custom performance (bursting), disks can also be increased in capacity but not decreased. Azure Premium SSDs deliver high-performance and low-latency disk support for virtual machines (VMs) with input/output (IO)-intensive workloads.(max IOPS 20,000)
+Premium SSD enables me to set custom performance (bursting), disks can also be increased in capacity but not decreased. Azure Premium SSDs deliver high-performance and low-latency disk support for virtual machines (VMs) with input/output (IO)-intensive workloads (max IOPS 20,000)
 
-Managed Disk can be encrypted using Microsoft Managed Key or Disk Encryption Set (own key via KeyVault), OS can also be encrypton (Bitlocker Windows, dmcrypt Linux)
+Managed Disk can be encrypted using Microsoft Managed Key or Disk Encryption Set (own key via KeyVault), OS can also be encrypted (Bitlocker Windows, dmcrypt Linux)
 
 Three encryption options:
 
@@ -385,7 +379,7 @@ Three encryption options:
 - **Server-Side Encryption (SSE)** is performed on the physical disks in the data center. If someone directly accesses the physical disk, the data will be encrypted. When the data is accessed from the disk, it's decrypted and loaded into memory. This form of encryption is also referred to as encryption at rest or Azure Storage encryption.
 - **Encryption at host** ensures that data stored on the VM host is encrypted at rest and flows encrypted to the Storage service. Disks with encryption at host enabled aren't encrypted with SSE. Instead, the server hosting your VM provides the encryption for your data, and that encrypted data flows into Azure Storage.
 
-Storage Account key access can be disabled, alternative would be Shared Access Signature (signed with Access key), another option RBAC data. A Shared access signature is a string that contains a security token that can be attached to a URI. Use a shared access signature to delegate access to storage objects and specify constraints, such as the permissions and the time range of access.
+Storage Account key access can be disabled, alternative would be Shared Access Signature (signed with Access key), another option RBAC data. A Shared access signature is a string that contains a security token that can be attached to a URI. Use a shared access signature to delegate access to storage objects and specify constraints, such as the permissions and the time range of access. Shared Access Signatures (SAS) allows for limited-time fine grained access control to resources.
 
 The default network rule is to allow all connections from all networks.
 
@@ -471,11 +465,11 @@ By default, Azure SQL Database automatic backups remain available to restore fo
 
 The vCore-based purchasing model offers three service tiers:
 
-- General Purpose: designed for common workloads. It offers budget-oriented balanced compute and storage options.
-- Business Critical: designed for OLTP applications with high transaction rates and low latency I/O requirements. It offers the highest resilience to failures by using several isolated replicas.
-- Hyperscale: designed for most business workloads. Hyperscale provides great flexibility and high performance with independently scalable compute and storage resources. It offers higher resilience to failures by allowing configuration of more than one isolated database replica.
+- General Purpose: designed for common workloads. It offers budget-oriented balanced compute and storage options. Up to 4TB storage.
+- Business Critical: designed for OLTP applications with high transaction rates and low latency I/O requirements. It offers the highest resilience to failures by using several isolated replicas. Up to 4TB storage.
+- Hyperscale: designed for most business workloads. Hyperscale provides great flexibility and high performance with independently scalable compute and storage resources. It offers higher resilience to failures by allowing configuration of more than one isolated database replica. Supports up to 100TB size.
 
-Key porints for Business Critical tier are low I/O latency requirements & workloads that need a consistently fast response from the storage layer (1-2 milliseconds in average).
+Key points for Business Critical tier are low I/O latency requirements & workloads that need a consistently fast response from the storage layer (1-2 milliseconds in average).
 
 The Hyperscale service tier is available only in Azure SQL Database. It uses a tiered layer of caches and page servers to expand the ability to quickly access database pages without having to access the data file directly. This tier uses snapshots, which allow for nearly instantaneous database backups, regardless of database size. Database restores take minutes rather than hours or days. Best option for large-scale on-premise database migration (up to 100TB).
 
@@ -576,7 +570,7 @@ T-SQL can be used to create Azure AD server principals and contained database us
 
 ## Azure Databricks & Synapse
 
-Azure Databricks is entirely based on Apache Spark with a ricks is entirely based on Apache Spark with a built-in core API for core languages like SQL, Java, Python, R, and Scala.
+Azure Databricks is entirely based on Apache Spark with a built-in core API for core languages like SQL, Java, Python, R, and Scala.
 
 - **Control Plane**: Hosts Databricks jobs, notebooks with query results, and the cluster manager. The Control plane also has the web application, hive metastore, and security access control lists (ACLs), and user sessions. These components are managed by Microsoft in collaboration with Azure Databricks and don't reside within your Azure subscription. The Control plane also has the web application, hive metastore, and security access control lists (ACLs), and user sessions. These components are managed by Microsoft in collaboration with Azure ricks jobs, notebooks with query results, and the cluster manager. The Control plane also has the web application, hive metastore, and security access control lists (ACLs), and user sessions. These components are managed by Microsoft in collaboration with Azure Databricks and don't reside within your Azure subscription.
 - **Data Plane**: Contains all the Azure Databricks runtime clusters that are hosted within the workspace. All data processing and storage exists within the client subscription. No data processing ever takes place within the Microsoft/Databricks-managed subscription.ricks runtime clusters that are hosted within the workspace. All data processing and storage exists within the client subscription. No data processing ever takes place within the Microsoft/ricks runtime clusters that are hosted within the workspace. All data processing and storage exists within the client subscription. No data processing ever takes place within the Microsoft/Databricks-managed subscription.
@@ -587,7 +581,7 @@ Databricks Credentials passthrough allows users to authenticate with Azure Data
 
 Databricks Premium SKU provides access control for DBFS root and FUSE mount points. This will ensure that the data engineers can only access folders to which they have permissions.
 
-Service principals give automated tools and scripts API-only access to Azure Databricks resources, providing greater security than using users or groups.
+Service principals give automated tools and scripts API-only access to Azure Databricks resources, providing greater security than using users or groups. They work across Azure tenants and also for OnPrem/Hybrid Cloud scenarios.
 
 Azure Synapse supports data ingestion, exploration, transformation, and management, and supports analysis for all your BI and machine learning needs. Its architecture is based on a control node and multiple compute nodes. The control node is the brain of the architecture. It's the front end that interacts with all applications. The compute nodes provide the computational power. The data to be processed is distributed evenly across the nodes. Data is queried in the form of Transact-SQL statements, and Azure Synapse Analytics runs them. Azure Synapse uses a technology named [PolyBase](https://learn.microsoft.com/en-us/sql/relational-databases/polybase/polybase-guide? "https://learn.microsoft.com/en-us/sql/relational-databases/polybase/polybase-guide?") that enables you to retrieve and query data from relational and non-relational sources. You can save the data read in as SQL tables within the Azure Synapse service.
 
@@ -616,6 +610,8 @@ Storage-optimized VMs (L*) for VMs running databases
 GPU-optimized VMs are N*.
 
 Azure virtual machine scale sets let you create and manage a group of load balanced VMs. The number of VM instances can automatically increase or decrease in response to demand or a defined schedule. Scale sets provide high availability to your applications, and allow you to centrally manage, configure, and update many VMs. There is no cost for the scale set itself, you only pay for each VM instance that you create. VMs in a scale set can also be deployed into multiple availability zones, a single availability zone, or regionally. Scale sets scale up based on metrics (e.g. CPU), typically sampled of last 1/5 minutes.
+
+A host group is a resource that represents a collection of dedicated hosts. You create a host group in a region and an availability zone, and add hosts to it.
 
 Azure Batch: Managed service to run large-scale parallel and high-performance computing (HPC) applications. It is based on VMs and...
 
@@ -651,7 +647,7 @@ Deployment slots provided by Azure web apps is the fastest method for swapping b
 
 Scale Up (vertical): add more power to existing infra / Scale Out (horizontal): add more infra (nodes)
 
-Azure CycleCloud Provides the simplest way to manage HPC workloads using any scheduler (like Slurm, Grid Engine, HPC Pack, HTCondor, LSF, PBS Pro, or Symphony) on Azure.
+Azure CycleCloud provides the simplest way to manage HPC workloads using any scheduler (like Slurm, Grid Engine, HPC Pack, HTCondor, LSF, PBS Pro, or Symphony) on Azure.
 
 Azure Mobile App Service & Azure Notification Hubs enable sending Push notifications from backend (to mobile apps).
 
@@ -884,7 +880,7 @@ JIT (just in time) network access lets you lock down inbound traffic to your vir
 
 Azure Bastion is generally recommended for persistant access to VM via SSH/RDP (no Public IP needed), JIT for temporary access.
 
-To analyze Network Traffic in VMs use Azure Network Watcher IP Flow Verify which allows you to detect traffic filtering issues at a VM level. Network Watcher Traffic Analytics focuses on network activity across subscriptions, hot spots, regions.
+To analyze Network Traffic in VMs use Azure Network Watcher **IP Flow Verify** which allows you to detect traffic filtering issues at a VM level. Network Watcher Traffic Analytics focuses on network activity across subscriptions, hot spots, regions.
 
 # Operational Excellence 
 
@@ -1115,7 +1111,7 @@ Penetration Testing: Run periodic security tests that are conducted by experts 
 
 SDL reviews bring clarity around security features. SDL can help you maintain an inventory of workload assets and their security reports, which cover origin, usage, operational weaknesses, and other factors.
 
-Advanced Thread protection in Azure STorage currently only available for Blob Storage.
+Advanced Thread protection in Azure Storage currently only available for Blob Storage.
 
 Inbound/outbound port rules: Processing stops once traffic matches a rule (low numbers first, high numbers later/not processed)
 
