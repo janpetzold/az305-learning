@@ -21,7 +21,8 @@ Typical Azure hierarchy:
 - Limit the regions where virtual machines can be created, across subscriptions.
 - Provide user access to multiple subscriptions by creating one role assignment that's inherited by other subscriptions.
 - Monitor and audit role and policy assignments, across subscriptions.
-- A management group tree can support up to [six levels of depth](https://learn.microsoft.com/en-us/azure/governance/management-groups/overview "https://learn.microsoft.com/en-us/azure/governance/management-groups/overview"). This limit doesn't include the tenant root level or the subscription level. Generally they should  have no more than three or four levels.
+- A management group tree can support up to [six levels of depth](https://learn.microsoft.com/en-us/azure/governance/management-groups/overview "https://learn.microsoft.com/en-us/azure/governance/management-groups/overview"). This limit doesn't include the tenant root level or the subscription level
+- generally MGs should not have more than three or four levels.
 - Azure role-based access control authorization for management group operations isn't enabled by default.
 - By default, all new subscriptions are placed under the root management group.
 - 10,000 management groups can be supported in a single directory.
@@ -110,13 +111,15 @@ Microsoft Entra ID provides services such as:
 
 When you connect Active Directory with Microsoft Entra ID, Microsoft can help protect you by detecting suspicious sign-in attempts at no extra cost. For example, Microsoft Entra ID can detect sign-in attempts from unexpected locations or unknown devices.
 
-Microsoft Entra Domain Services is a service that provides managed domain services such as domain join, group policy, lightweight directory access protocol (LDAP), and Kerberos/NTLM authentication. Does not require own domain controllers (security authentication within a Windows domain like login, permission checking, directory service) in the Cloud. Entra Domain Services can create managed ID in virtual network e.g. based on LDAP. Entra/Azure AD Domain Services is used when you need traditional AD domain services in the cloud, especially for legacy applications that require domain joining, LDAP, or NTLM/Kerberos authentication.
+Microsoft Entra Domain Services is a service that provides managed domain services such as domain join, group policy, lightweight directory access protocol (LDAP), and Kerberos/NTLM authentication. Does not require own domain controllers (security authentication within a Windows domain like login, permission checking, directory service) in the Cloud. Entra Domain Services can create managed ID in virtual network e.g. based on LDAP. Entra/Azure AD Domain Services is used when you need traditional AD domain services in the cloud, especially for legacy applications that require domain joining, LDAP, or NTLM/Kerberos authentication. Entra Domain Services store (hashed) passwords in the cloud.
 
 With External Identities, external users can "bring their own identities." Whether they have a corporate or government-issued digital identity, or an unmanaged social identity like Google or Facebook, they can use their own credentials to sign in. The external user’s identity provider manages their identity, and you manage access to your apps with Microsoft Entra ID or Azure AD B2C to keep your resources protected. External Identities covers a range of external user management scenarios, including both B2B and B2C interactions.
 
-Azure Entitlement Management enables users from other AD tenant to access yours.
+Azure Entitlement Management enables users from other AD tenant to access yours (connecting external organization users from another tenant to your single AD tenant).
 
 SSO without IdP can be done via Password-based SSO (enables you to manage user access and passwords to web applications that don't support identity federation).
+
+Seamless SSO works with any method of cloud authentication – Password Hash Synchronization or Pass-through Authentication, and can be enabled via Azure AD Connect (to enable OnPrem offices to interact with Azure resources). It can be started by adding http://autologon.microsoftazuread-sso.com/ to the intranet zone of each client computer in the respective office.
 
 Client Credentials Flow is for server-to-server interactions without user involvement. Relies on the client being able to securely store the credentials. Typically used for Server-to-server authentication where an application needs to call an API to fetch data for its own use, without human interaction.
 
@@ -165,9 +168,9 @@ So Conditional Access can use conditions user/group, application, device state, 
 
 To use Conditional Access, you need a Microsoft Entra ID P1 or P2 license. If you have a Microsoft 365 Business Premium license, you also have access to Conditional Access features.
 
-MFA Service Settings allow yout to define time intervals for re-authentication (e.g. every 14 days with device).
+MFA Service Settings allow you to define time intervals for re-authentication (e.g. every 14 days with device).
 
-For Customers you should use Azure AD B2C instance so they can use their own Social accounts but can also create one,
+For Customers you should use Azure AD B2C instance so they can use their own Social accounts but can also create one.
 
 Azure AD Free Tier already supports 
 
@@ -181,10 +184,18 @@ Premium P1 adds things like
 - automatic addition / removal of users to certain groups in Azure AD based on specified criteria
 - MFA
 
-Identity Protection provides risk policy detection that includes any identified suspicious actions related to user accounts in the directory. Two risk policies are evaluated: user risk and sign-in risk.
+MFA is deployed by enforcing policies with Conditional Access.
+
+Azure AD Pass-through Authentication allows your users to sign in to both on-premises and cloud-based applications using the same passwords. When users sign in using Azure AD, this feature validates users’ passwords directly against your on-premises Active Directory. It always uses the onPrem instance and can't fall back to Azure (works with password hash sync) and requires installation and maintenance of PTA agents.
+
+Azure AD Join allows devices to be registered directly with Azure AD.
+
+Identity Protection will show you the risk events such as users who sign in from infected devices (malware), impossible travel to atypical locations and sign-ins from anonymous IP addresses. There are two policies:
 
 - **User risk** represents the probability that a given identity or account is compromised. An example is when a user's valid credentials are leaked. User risks are calculated offline by using Microsoft's internal and external threat intelligence sources. (Leaked credentials, threat intelligence). Microsoft recommends "High" threshold for User risk policy.
 - **Sign-in risk** represents the probability that a given sign-in (authentication request) isn't authorized by the identity owner. Sign-in risk can be calculated in real time or offline. (anonymous IP, atypical travel, malware-linked IP address, password spray). Microsoft recommends "Medium and above" threshold for Sign-in risk policy.
+
+Identity Protection helps to find out about leaked credentials. Identity Protection requires password hash synchronisation for onPrem scenarios.
 
 Summary:
 
@@ -220,12 +231,16 @@ UPN: User Principal Name, typically an email address
 
 There are also User-assigned managed identities that can be assigned to multiple resources. Managed identities provide an identity for apps to use when connecting to resources that support Microsoft Entra authentication. Apps can use the managed identity to obtain Microsoft Entra tokens. A managed identity combines Microsoft Entra authentication and Azure role-based access control (RBAC). When you use managed identities, you don't need to rotate credentials or worry about expiring certifications.
 
+A Managed Identity can also be used to get admin access temporarily.
+
 There are two types of managed identities:
 
 - **System-assigned**: Some Azure services allow you to enable a managed identity directly on a service instance. (Good for **single resource** or independent identitites)
 - **User-assigned**: You can create a managed identity as a standalone Azure resource. Create a user-assigned managed identity and assign it to one or more instances of an Azure service. A user-assigned identity is managed separately from the resources that use it. (good for **multiple resources** with same identity or need pre-authorization)
 
 User-assigned managed identities automate credential rotation and can be applied to multiple resources. Service principals depend on secrets that expire and do not have automatic credential rotation.
+
+If a VM shall create/change resources in a RG, the VM should get a Managed Service Identity.
 
 Summary:
 
@@ -247,7 +262,7 @@ Key Vault Premium is fully managed and FIPS 140-2 Level 2. Key Vault Standard is
 
 In order for Resource Manager templates to access Azure Key Vault you need to enable the setting in the Advanced policy section for the Key Vault.
 
-Disaster recovery for keys/secrets in KeyVault is only possible in the same subscription and Azure geography. During failover key vault is in read-only mode.
+Disaster recovery for keys/secrets in KeyVault is only possible in the same subscription and Azure geography. To move KeyVault keys/secrets between regions you need to manually download & upload secrets. During failover key vault is in read-only mode. 
 
 Data Protection for KeyVault:
 
@@ -295,13 +310,21 @@ Blob Storage supports Blobs up to 5TB, Page Blobs up to 8TB, Append Blobs (e.g. 
 
 Premium Block Storage: Recommended for applications with high transaction rates. Use Premium block blobs if you work with smaller objects or require consistently low storage latency.
 
-Premium File Shares: if you require support for both Server Message Block (SMB) and NFS file shares. Support up to 100TB file size.
+Premium File Shares: if you require support for both Server Message Block (SMB) and NFS file shares. Support up to 100TB file size. Azure Files Premium offers lowest latency. "Transaction optimized" tier is a balance between performance and cost.
 
-Premium Page Blobs: Page blobs are ideal for storing index-based and sparse data structures, such as operating systems, data disks for virtual machines, and databases.
+Premium Page Blobs: Page blobs are ideal for storing index-based and sparse data structures, such as operating systems, data disks for virtual machines, and databases. Good for applications that demand high IOPS and low latency (but not video streaming).
 
 Block storage has Access Tiers (Hot, Cool, Archive=offline), always a balance between capacity and transactions. Archive is not available in General Purpose v1.
 
+General Purpose Account can store up to 5PB. Hierarchical namespace allow multiple subfolders.
+
+Data can't be migrated between Storage tiers Standard and Premium.
+
+In Archive Storage, 180 days is the minimum amount of days the data should be stored before accessing it to avoid early access penalty costs
+
 Data in the cool and cold access tiers can tolerate slightly lower availability, but still requires high durability, retrieval latency, and throughput characteristics similar to hot data. For cool and cold data, a lower availability service-level agreement (SLA) and higher access costs compared to hot data are acceptable trade-offs for lower storage costs.
+
+You cannot create Azure file shares from Blob storage accounts or premium general purpose (GPv1 or GPv2) storage accounts.
 
 Summary:
 
@@ -336,15 +359,15 @@ Premium does not enable Globally redundancy, Standard does (trade-off performanc
 Redundancy Options:
 
 - Locally redundant storage (LRS) > LRS replicates your data three times within a single data center in the primary region. LRS provides at least 11 nines of durability (99.999999999%) of objects over a given year.
-- Geo-redundant storage (GRS) > GRS copies your data synchronously three times within a single physical location in the primary region using LRS. It then copies your data asynchronously to a single physical location in the secondary region (the region pair) using LRS. GRS offers durability for Azure Storage data objects of at least 16 nines (99.99999999999999%) over a given year.
+- Geo-redundant storage (GRS) > GRS copies your data synchronously three times within a single physical location in the primary region using LRS. It then copies your data asynchronously to a single physical location in the secondary region (the region pair) using LRS. So basically any data stored has 6 copies by default in GRS. GRS offers durability for Azure Storage data objects of at least 16 nines (99.99999999999999%) over a given year.
 - Read-access geo-redundant storage (RA-GRS)
 - Zone-redundant storage (ZRS) > ZRS replicates your Azure Storage data synchronously across three Azure availability zones in the primary region. ZRS offers durability for Azure Storage data objects of at least 12 nines (99.9999999999%) over a given year
-- Geo-zone-redundant storage (GZRS) > Data in a GZRS storage account is copied across three Azure availability zones in the primary region (similar to ZRS) and is also replicated to a secondary geographic region, using LRS, for protection from regional disasters. Microsoft recommends using GZRS for applications requiring maximum consistency, durability, and availability, excellent performance, and resilience for disaster recovery.GZRS is designed to provide at least 16 nines (99.99999999999999%) of durability of objects over a given year
-- Read-access geo-zone-redundant storage (RA-GZRS) > mixture
+- Geo-zone-redundant storage (GZRS) > Data in a GZRS storage account is copied across three Azure availability zones in the primary region (similar to ZRS) and is also replicated to a secondary geographic region, using LRS, for protection from regional disasters. Microsoft recommends using GZRS for applications requiring maximum consistency, durability, and availability, excellent performance, and resilience for disaster recovery. GZRS is designed to provide at least 16 nines (99.99999999999999%) of durability of objects over a given year
+- Read-access geo-zone-redundant storage (RA-GZRS) > mixture, RA=read only
 
 For read access to the secondary region, enable read-access geo-redundant storage (RA-GRS) or read-access geo-zone-redundant storage (RA-GZRS). RA-GRS is generally cheaper than RA-GZRS.
 
-RA: Read access only
+Blob Storage type can have both LRS and GRS replications (LRS can be converted to GRS).
 
 The StorSimple Virtual Array is a good solution for having hybrid cloud storage where on-premise devices can connect to Azure using iSCSI. This also needs a Storage Account.
 
@@ -370,9 +393,11 @@ Azure Queue storage is a service for storing large numbers of messages. Once sto
 
 The Azure Import/Export service migrates large quantities of data between an on-premises location and an Azure storage account. By using the Import/Export service, you send and receive physical disks that contain your data between your on-premises location and an Azure datacenter. Import/export requires driveset and dataset CSV files.
 
-Azure Data Box is a physical migration service that helps transfer large amounts of data in a quick, inexpensive, and reliable way. The secure data transfer is accelerated by shipping you a proprietary Data Box storage device that has a maximum usable storage capacity of 80 terabytes. Data Box is ideally suited for transferring data sizes larger than 40 TBs where there is also limited network bandwidth (e.g. 100MBps). Data Box is managed by Microsoft.
+Azure Data Box is a physical migration service that helps transfer large amounts of data in a quick, inexpensive, and reliable way. The secure data transfer is accelerated by shipping you a proprietary Data Box storage device that has a maximum usable storage capacity of 80 terabytes. Data Box is ideally suited for transferring data sizes larger than 40 TBs where there is also limited network bandwidth (e.g. 100MBps). Databox Heavy supports up to 1 Petabyte of data transfer, DataBox Disk up to 35TB (via USB 3.0). Data Box is managed by Microsoft. EA and CSP subscriptions offer support Azure Data Box.
 
-Azure Table storage stores large amounts of structured data. Azure tables are a NoSQL datastore that accepts authenticated calls from inside and outside the Azure cloud. This enables you to use Azure tables to build your hybrid or multi-cloud solution and have your data always available. Azure tables are ideal for storing structured, non-relational data.
+Azure Table storage stores large amounts of structured data. Azure tables are a NoSQL datastore that accepts authenticated calls from inside and outside the Azure cloud. This enables you to use Azure tables to build your hybrid or multi-cloud solution and have your data always available. Azure tables are ideal for storing structured, non-relational data. They are also supported in General Purpose v1 accounts.
+
+The same endpoint of a storage account can be used for multiple services (Blob, File, Queue, Table).
 
 ## SQL & Analytics
 
@@ -388,18 +413,20 @@ Azure SQL DB:
 - 100 TB size
 - Autoscale enabled
 - Supports active geo-replication across regions (both General Purpose and Premium)
-- Supports autofailover groups
+- Supports autofailover groups and spatial capabilities (store, query, and analyze geographic and geometric data)
 - Columnstore indexing supported in tiers S3 & Premium
 - Service Tiers available: General purpose (1 node), Business Critical (several nodes), Hyperscale (Sharding with page servers)
 
 Azure SQL Managed Instance
 
 - PaaS in VNet, better compatibility, ideally for Lift & Shift migrations
-- Supports autofailover groups (but not geo-replication in multiple regions or autoscaling)
+- supports user-initiated backups (N/A in Azure SQL)
+- Supports autofailover groups (but not geo-replication in multiple regions or autoscaling) between regions
 - supports more features compared to Az SQL DB (e.g. CLR without file system access, Cross-database transactions), good for migrating onPremise workloads to VMs
-- uses vCores mode, max CPU/Storage can be definedm supports Hybrid benefit
+- uses vCores mode, max CPU/Storage can be defined, supports Hybrid benefit
 - deploys own Virtual Network
 - ideal for customers interested in instance-scoped features, such as SQL Server Agent, Common language runtime (CLR), Database Mail, Distributed transactions, and Machine Learning Services
+- does not support SSIS, SSAS and SSRS
 
 Both SQL Database and SQL Managed Instance use SQL Server technology to create full backups every week, differential backups (=increments) every 12-24 hours, and transaction log backups (to restore transaction logs up to a specific time, which includes the moment before data was mistakenly deleted) every 5 to 10 minutes.
 
@@ -412,6 +439,8 @@ Pricing Options:
 vCore-based with serverless compute stops the database service when it is not in use. DTU-based and vCore-based with provisioned compute do not scale down automatically.
 
 Azure SQL Database elastic pools are a simple, cost-effective solution for managing and scaling multiple databases that have varying and unpredictable usage demands.
+
+Elastic database transactions for Azure SQL DB allow you to run transactions that span several databases.
 
 Summary:
 
@@ -433,6 +462,8 @@ Azure SQL General Purpose tier supports zone-redundant configurations, which ca
 Azure uses Transparent data encryption (TDE) for Data at Rest. All new SQL DBs and Azure SQL Managed Instance after February 2019 have TDE enabled. TDE performs encryption and decryption of the data at the page level. The data is encrypted as the data is written to the data page on disk and decrypted when the data page is read into memory. TDE does not provide column-level encryption. Backups are also encrypted. DB Encryption keys can be Service- oder Customer-managed.
 
 "Always Encrypted" is a new data encryption technology in Azure SQL Database and SQL Server that helps protect sensitive data at rest on the server, during movement between client and server, and while the data is in use. Also provides column-level encryption.
+
+Dynamic Data Masking (DDM) is a feature in Azure SQL Database that helps you protect sensitive data by obfuscating it from non-privileged users.
 
 Elastic database transactions for Azure SQL DB allow you to run transactions that span several databases in SQL DB.
 
@@ -496,9 +527,13 @@ The **Log Shipping** mechanism is simple: first, take a full backup of the sourc
 
 Cluster mechanism is Windows Server Failover Cluster (WSFC) of Windows and Pacemaker (Linux). 
 
-LTR (Long Term Retention) is required to store a backup for more than 35 days.
+LTR (Long Term Retention) is required to store a backup for more than 35 days. LTR can be configured for Azure SQL database Single and Pooled instances (not for Managed instances). In Managed instances SQL Agent jobs can be used to achieve LTR.
+
+Azure SQL Basic, Standard and Premium tiers all support an uptime SLA of 99.99%.
 
 Data Migration Assistant can be used to assess the on-premises SQL environment and report on viability. Actual migration is done by Data Migration Service.
+
+BACPAC file is a container format used in Microsoft SQL Server and Azure SQL Database to export a database schema and data to a file. Recommended for small DBs or one-time migrations. Otherwise use DMS or Azure Migrate.
 
 Azure SQL Edge
 
@@ -536,6 +571,8 @@ Azure Stream Analytics is a fully managed (PaaS offering) data warehousing solut
 Data security needs data classification (Azure Purview), data at rest (transparent data encryption), in transit, in use (dynamic data masking e.g. for last digits of credit card, always encrypting even on client side)
 
 An ideal data store that can store large amounts of data with an integration with Power BI is the SQL Data Warehouse.
+
+T-SQL can be used to create Azure AD server principals and contained database users. Database-level IP firewall rules shall also be created via T-SQL.
 
 ## Azure Databricks & Synapse
 
@@ -578,7 +615,7 @@ Storage-optimized VMs (L*) for VMs running databases
 
 GPU-optimized VMs are N*.
 
-Azure virtual machine scale sets let you create and manage a group of load balanced VMs. The number of VM instances can automatically increase or decrease in response to demand or a defined schedule. Scale sets provide high availability to your applications, and allow you to centrally manage, configure, and update many VMs. There is no cost for the scale set itself, you only pay for each VM instance that you create. VMs in a scale set can also be deployed into multiple availability zones, a single availability zone, or regionally.
+Azure virtual machine scale sets let you create and manage a group of load balanced VMs. The number of VM instances can automatically increase or decrease in response to demand or a defined schedule. Scale sets provide high availability to your applications, and allow you to centrally manage, configure, and update many VMs. There is no cost for the scale set itself, you only pay for each VM instance that you create. VMs in a scale set can also be deployed into multiple availability zones, a single availability zone, or regionally. Scale sets scale up based on metrics (e.g. CPU), typically sampled of last 1/5 minutes.
 
 Azure Batch: Managed service to run large-scale parallel and high-performance computing (HPC) applications. It is based on VMs and...
 
@@ -597,6 +634,8 @@ Virtual Nodes allow AKS cluster to use Azure Container Instances (ACI) as worker
 
 In AKS the Contributor role can change roles and bindings.
 
+Oracle WebLogic apps can be hosted in AKS.
+
 Azure Functions default timeout is 300 seconds (5 minutes) for Consumption Plan functions, and 30 minutes for any other plan. Azure Functions Premium tier has these features:
 
 - perpetually warm instances to avoid any cold start
@@ -606,13 +645,15 @@ Azure Functions default timeout is 300 seconds (5 minutes) for Consumption Plan 
 
 You can use the AppService WebJobs feature to run a program (.exe, Java, PHP, Python, or Node.js) or script (.cmd, .bat, PowerShell, or Bash) in the same context as a web app, API app, or mobile app. They can be scheduled or run by a trigger. WebJobs are often used to run background tasks as part of your application logic.
 
-Only AppService plans Premium V2 and Premium V3 are zone redundant. AppService Standard plan (S1) supports scaling up to 10 instances. AppService Free plans (D1, F1) don't have SSL Certificates.
+Only AppService plans Premium V2 and Premium V3 are zone redundant. AppService Standard plan (S1) supports (auto-)scaling up to 10 instances. AppService Free plans (D1, F1) don't have SSL Certificates.
 
 Deployment slots provided by Azure web apps is the fastest method for swapping between deployed environments.
 
 Scale Up (vertical): add more power to existing infra / Scale Out (horizontal): add more infra (nodes)
 
 Azure CycleCloud Provides the simplest way to manage HPC workloads using any scheduler (like Slurm, Grid Engine, HPC Pack, HTCondor, LSF, PBS Pro, or Symphony) on Azure.
+
+Azure Mobile App Service & Azure Notification Hubs enable sending Push notifications from backend (to mobile apps).
 
 **Messaging**
 
@@ -655,7 +696,7 @@ It does not have a built-in mechanism to handle messages that aren't processed 
 
 Event Hub is focused on high throughput and streaming (telemetry, logging), Service Bus (like Kafka) more FIFO-oriented (queues, topics) with more complex routing & processing of messages.
 
-Azure Event Grid is a fully managed event routing service that runs on Azure Service Fabric suitable for reactive programming. It aggregates all your events and provides routing from any source to any destination. It understands all kind of sources (Storage, IoT Hub, ML, Redis, ...) and registers handlers (Function, Storage Queue, Logic Apps, ...)
+Azure Event Grid is a fully managed event routing service that runs on Azure Service Fabric suitable for reactive programming. It aggregates all your events and provides routing from any source to any destination. It understands all kind of sources (Storage, IoT Hub, ML, Redis, ...) and registers handlers (Function, Storage Queue, Logic Apps, ...). Event Grid can also be used to create events when resources are deleted or created within a resource group.
 
 Logic Apps: Graphical Designer for event-based actions, no code, lots of templates and connectors, not ideal for real-time requirements, complex business rules, non-standard services. If Logic Apps need to access an onPrem resource you need an On-Premises Data Gateway (locally) and Azure Connection Gateway Resources (remotely).
 
@@ -769,12 +810,19 @@ High availability for VPNs with following measures:
 - ExpressRoute failover (Azure ExpressRoute lets you extend your on-premises networks into the Microsoft cloud over a private connection, with the help of a connectivity provider. No public internet. Uses BGP.)
 - Zone-redundant gateways
 
+The VPN gateway service enables you to connect the VNet to the on-premises network through a VPN appliance.
+
+Virtual network gateway: A resource that provides a virtual VPN appliance for the VNet. It is responsible for routing traffic from the on-premises network to the VNet.
+Local network gateway: An abstraction of the on-premises VPN appliance. Network traffic from the cloud application to the on-premises network is routed through this gateway.
+
 ExpressRoute connectivity models:
 
 - Co-location at a cloud exchange: Co-location refers to your datacenter, office, or other facility being physically co-located at a cloud exchange, such as an ISP. If your facility is co-located at a cloud exchange, you can request a virtual cross-connect to the Microsoft cloud.
 - Point-to-point Ethernet connection: Point-to-point ethernet connection refers to using a point-to-point connection to connect your facility to the Microsoft cloud.
 - Any-to-any networks: With any-to-any connectivity, you can integrate your wide area network (WAN) with Azure by providing connections to your offices and datacenters. Azure integrates with your WAN connection to provide a connection like you would have between your datacenter and any branch offices.
 - Directly from ExpressRoute sites: You can connect directly into the Microsoft's global network at a peering location strategically distributed across the world. ExpressRoute Direct provides dual 100 Gbps or 10-Gbps connectivity, which supports Active/Active connectivity at scale.
+
+Generally favor ExpressRoute vs. VPN for reliable and consistent performance connectivity.
 
 Azure Virtual WAN is a centrally managed collection of connectivity resources like VPNs, which enables organizations to use the Microsoft backbone in a self-contained, security isolated manner (global private network). It supports remote user access to Azure and on-premises resources through point-to-site VPN capabilities.
 
@@ -790,16 +838,18 @@ Azure Front Door lets you define, manage, and monitor the global routing for you
 - terminate SSL connections as close to the end user as possible
 - route traffic to the lowest latency Azure region hosting the web app
 
-Azure Traffic Manager is a DNS-based traffic load balancer that enables you to distribute traffic optimally to services across global Azure regions, while providing high availability and responsiveness. Traffic Manager provides a range of traffic-routing methods to distribute traffic such as priority, weighted, performance, geographic, multi-value, and subnet. Traffic Manager provides failover and geographic routing but can't do caching or SSL termination.
+Azure Traffic Manager is a DNS-based traffic load balancer that enables you to distribute traffic optimally to services across global Azure regions, while providing high availability and responsiveness. Traffic Manager provides a range of traffic-routing methods to distribute traffic such as priority, weighted, performance, geographic, multi-value, and subnet. Traffic Manager provides failover and geographic routing but can't do caching or SSL termination. TM is recommended to optimize responsiveness and reliability.
 
 Azure Load Balancer provides high-performance, low-latency Layer 4 (Transport layer) load-balancing for all UDP and TCP protocols. To provide zonal fault tolerance (not regional!), you can deploy a standard Azure Load Balancer instance with internet-facing workloads or application tiers.
 
 Azure Application Gateway is a web traffic load balancer (+firewall and SSL termination) that enables you to manage traffic to your web applications (no focus on APIs). There are two primary methods of routing traffic:
 
 - Path-based routing: Send requests with different URL paths to a different pool of back-end servers
-- Multiple-site routing: Support tenants with virtual machines or other resources that host a web application
+- Multiple-site routing: Routing based on hostname (direct different URLs to different pools)
 
-You need to configure an Azure Application Gateway with multi-site listeners to direct different URLs to different pools.
+An AG requires an empty subnet for hosting the AG resources.
+
+Static Public IP addresses should be assigned to Load Balancer (not App Gateway). Azure Internal Load Balancer is recommended if you need port forwarding, HTTPS probes, availability set as backend pool (private IP, VNet).
 
 Summary:
 
@@ -832,7 +882,9 @@ Azure Bastion is a fully platform-managed PaaS service that you implement inside
 
 JIT (just in time) network access lets you lock down inbound traffic to your virtual machines.
 
-To analyze Network Traffic in VMs use Azure Network Watcher IP Flow Verify which allows you to detect traffic filtering issues at a VM level.
+Azure Bastion is generally recommended for persistant access to VM via SSH/RDP (no Public IP needed), JIT for temporary access.
+
+To analyze Network Traffic in VMs use Azure Network Watcher IP Flow Verify which allows you to detect traffic filtering issues at a VM level. Network Watcher Traffic Analytics focuses on network activity across subscriptions, hot spots, regions.
 
 # Operational Excellence 
 
@@ -936,6 +988,8 @@ Alert rules: triggered by Metrics, Logs, Activity Log, initializes Action Groups
 
 When ingesting more than 500 GB of logs per day, a dedicated cluster should be provisioned, ideally in the same region as the resource being monitored.
 
+SQLInsights data can be stored max. 730 days.
+
 # Availability
 
 Workload criticality:
@@ -972,9 +1026,13 @@ Azure Site Recovery: define how your virtual machines are failed over, and the 
 - **Site Recovery service**: Site Recovery helps ensure business continuity by keeping business apps and workloads running during outages. Site Recovery [replicates](https://learn.microsoft.com/en-us/azure/site-recovery/azure-to-azure-quickstart "https://learn.microsoft.com/en-us/azure/site-recovery/azure-to-azure-quickstart") workloads running on physical and virtual machines (VMs) from a primary site to a secondary location. When an outage occurs at your primary site, you fail over to a secondary location, and access apps from there. After the primary location is running again, you can fail back to it.
 - **Backup service**: The [Azure Backup](https://learn.microsoft.com/en-us/azure/backup/ "https://learn.microsoft.com/en-us/azure/backup/") service keeps your data safe and recoverable.
 
-For Hyper-V to Azure migration via Site Recovery there is no Bitlocker support, Windows Server only 2012 (not 2016) and Linux Gen2 VMs are not supported
+For Hyper-V to Azure migration via Site Recovery there is no Bitlocker support, Windows Server only 2012 (not 2016) and Linux Gen2 VMs are not supported.
+
+To migrate a VM from AWS/Google to Azure you need a server in AWS as config server, Azure Site Recovery Unified Setup and enable replication for the VM.
 
 You can’t delete a Recovery Services vault if it is registered to a server and holds backup data. Therefore all backups operations must be stopped before deleting the vault.
+
+A Backup Policy in Azure Recovery Services vault is used to configure retention and schedule of the backup.
 
 Examples of high-availability design components include clustering and load balancing:
 
@@ -994,7 +1052,7 @@ Azure Blob Storage backup and recovery:
 - **Azure Backup vault**: Azure Backup vaults are used with Azure Backup only. Supported data sources include Azure Database for PostgreSQL servers, Azure blobs, and Azure disks.
 - **Azure Recovery Services vault**: Azure Recovery Services vaults can be used with Azure Backup or Azure Site Recovery. Supported data sources include Azure virtual machines, SQL or SAP HANA in an Azure virtual machine, and Azure file shares. You can back up data to a Recovery Services vault from Azure Backup Server, Azure Backup Agent, and System Center Data Protection Manager.
 
-Recovery Service Vaults can only be created with "Owner" or "Contributor" roles. Replication jobs can be done with "Site Recovery Contributor" role.
+Recovery Service Vaults can only be created with "Owner" or "Contributor" roles. Replication jobs can be done with "Site Recovery Contributor" role. The vault must be in the same region as the data source.
 
 Azure Blob Storage backup and recovery: local backup solution for Azure Blob Storage - backup data is stored in your source Azure storage account rather than being transferred to an Azure Backup storage vault.
 
@@ -1063,7 +1121,7 @@ Inbound/outbound port rules: Processing stops once traffic matches a rule (low n
 
 Bitlocker encrypts Windows VMs, DM Crypt is used for Linux VMs
 
-DNS port is 53, WINS/NetBIOS is 137 (UDP)
+DNS port is 53, WINS/NetBIOS is 137 (UDP), SMB port 445.
 
 # Costs
 
@@ -1104,6 +1162,8 @@ Switch to fixed-price billing instead of consumption-based billing for a resourc
 Nonproduction environments can have different features, SKUs, instance counts, and even logging. You also can save costs by creating preproduction environments on-demand and removing them when you no longer need them.
 
 Through experimentation mechanisms, such as A/B testing and developing proofs of concept, you can encourage innovation while keeping costs low.
+
+Licenses cannot be assigned to a user without a usage location specified (licensing issue assigning license to multiple users).
 
 # Migration
 
