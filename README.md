@@ -1,20 +1,16 @@
 ﻿# Introduction
 
-This is my own preparation material I created for the [AZ-305 exam](https://learn.microsoft.com/en-us/credentials/certifications/exams/az-305/). The content is primarily from two sources:
+This is my own preparation material I created for the [AZ-305 exam](https://learn.microsoft.com/en-us/credentials/certifications/exams/az-305/). The content is primarily from four sources:
 
-1. [Az305 learning path](https://learn.microsoft.com/en-us/credentials/certifications/exams/az-305/)
-1. [Az305 Savill training video](https://www.youtube.com/watch?v=vq9LuCM4YP4)
+1. [Az305 learning path & test exams](https://learn.microsoft.com/en-us/credentials/certifications/exams/az-305/)
+2. [Skillcertpro test exams](https://skillcertpro.com/microsoft-azure-az-305-practice-tests/)
+3. [Az305 Savill training video](https://www.youtube.com/watch?v=vq9LuCM4YP4)
 
-I have quite a bit of working experience with Azure so I left out obvious things known to me with the goal to keep this compact (less than 40 pages when printed, skillcertpro cheat sheet has 252 pages) & readable without skipping any major topic.
+I have quite a bit of working experience with Azure so I left out obvious things known to me with the goal to keep this compact (less than 40 pages when printed, skillcertpro cheat sheet has 252 pages) & readable without skipping any major things & learnings from the test exams I did.
+
+I passed the exam in May 2024 with 844 points, of course I don't know what I answered wrongly. I'd say the material in this document should give you ~50-60% of the necessary answers, the rest is experience, gut feeling, luck or a mix of them all.
 
 # Fundamentals
-
-Typical Azure hierarchy:
-
-- **Management groups** help you manage access, policy, and compliance for multiple subscriptions.
-- **Subscriptions** are logical containers that serve as units of management and scale. Subscriptions are also billing boundaries.
-- **Resource groups** are logical containers into which Azure resources are deployed and managed.
-- **Resources** are instances of services that you create. For example, virtual machines, storage, and SQL databases.
 
 **Management Groups**:
 
@@ -184,6 +180,8 @@ Premium P1 adds things like
 - automatic addition / removal of users to certain groups in Azure AD based on specified criteria
 - MFA
 
+Premium P2 is needed for definition of policies.
+
 MFA is deployed by enforcing policies with Conditional Access.
 
 Azure AD Pass-through Authentication allows your users to sign in to both on-premises and cloud-based applications using the same passwords. When users sign in using Azure AD, this feature validates users’ passwords directly against your on-premises Active Directory. It always uses the onPrem instance and can't fall back to Azure (works with password hash sync) and requires installation and maintenance of PTA agents.
@@ -259,6 +257,8 @@ Azure App Registration is the process of registering your application with Azure
 Best way to store secrets is Azure KeyVault (Secrets, Keys, Certificates). Azure Key Vault can manage secrets, (encryption) keys and certificates (TLS). Standard tier lets you encrypt your data with a software key. Premium tier offers hardware security module (HSM)-protected keys.
 
 Key Vault Premium is fully managed and FIPS 140-2 Level 2. Key Vault Standard is not FIPS 140-2 Level 2.
+
+Key Vault traffic should be divided for apps/regions, up to 1:1 relation app:KeyVault for performance reasons.
 
 In order for Resource Manager templates to access Azure Key Vault you need to enable the setting in the Advanced policy section for the Key Vault.
 
@@ -359,7 +359,7 @@ Redundancy Options:
 - Geo-zone-redundant storage (GZRS) > Data in a GZRS storage account is copied across three Azure availability zones in the primary region (similar to ZRS) and is also replicated to a secondary geographic region, using LRS, for protection from regional disasters. Microsoft recommends using GZRS for applications requiring maximum consistency, durability, and availability, excellent performance, and resilience for disaster recovery. GZRS is designed to provide at least 16 nines (99.99999999999999%) of durability of objects over a given year
 - Read-access geo-zone-redundant storage (RA-GZRS) > mixture, RA=read only
 
-For read access to the secondary region, enable read-access geo-redundant storage (RA-GRS) or read-access geo-zone-redundant storage (RA-GZRS). RA-GRS is generally cheaper than RA-GZRS.
+For read access to the secondary region, enable read-access geo-redundant storage (RA-GRS) or read-access geo-zone-redundant storage (RA-GZRS). RA-GRS is generally cheaper than RA-GZRS. GRS data is generally available to be read only if the customer or Microsoft initiates a failover from the primary to secondary region. This is not the case for RA-GRS, there the data is available in secondary region at all times.
 
 Blob Storage type can have both LRS and GRS replications (LRS can be converted to GRS).
 
@@ -455,7 +455,7 @@ Azure SQL General Purpose tier supports zone-redundant configurations, which ca
 
 Azure uses Transparent data encryption (TDE) for Data at Rest. All new SQL DBs and Azure SQL Managed Instance after February 2019 have TDE enabled. TDE performs encryption and decryption of the data at the page level. The data is encrypted as the data is written to the data page on disk and decrypted when the data page is read into memory. TDE does not provide column-level encryption. Backups are also encrypted. DB Encryption keys can be Service- oder Customer-managed.
 
-"Always Encrypted" is a new data encryption technology in Azure SQL Database and SQL Server that helps protect sensitive data at rest on the server, during movement between client and server, and while the data is in use. Also provides column-level encryption.
+"Always Encrypted" is a new data encryption technology in Azure SQL Database and SQL Server that helps protect sensitive data at rest on the server, during movement between client and server, and while the data is in use. Also provides column-level encryption. There is Deterministic and Randomized encryption, randomized encryption encrypts data less predictable manner and is more secure but prevents searching, grouping, indexing, and joining on encrypted columns (feasible with deterministic encryption).
 
 Dynamic Data Masking (DDM) is a feature in Azure SQL Database that helps you protect sensitive data by obfuscating it from non-privileged users.
 
@@ -528,6 +528,8 @@ Azure SQL Basic, Standard and Premium tiers all support an uptime SLA of 99.99%
 Data Migration Assistant can be used to assess the on-premises SQL environment and report on viability. Actual migration is done by Data Migration Service.
 
 BACPAC file is a container format used in Microsoft SQL Server and Azure SQL Database to export a database schema and data to a file. Recommended for small DBs or one-time migrations. Otherwise use DMS or Azure Migrate.
+
+DMS can perform continuous replication (minimize downtimes), Azure Migrate generally operates on snapshots (higher downtime).
 
 Azure SQL Edge
 
@@ -609,6 +611,10 @@ Storage-optimized VMs (L*) for VMs running databases
 
 GPU-optimized VMs are N*.
 
+Burstable VMs are ideal for workloads that do not need the full performance of the CPU continuously.
+
+Remote Direct Memory Access (RDMA) helps to minimize network latency / use of VMs CPU to transfer data
+
 Azure virtual machine scale sets let you create and manage a group of load balanced VMs. The number of VM instances can automatically increase or decrease in response to demand or a defined schedule. Scale sets provide high availability to your applications, and allow you to centrally manage, configure, and update many VMs. There is no cost for the scale set itself, you only pay for each VM instance that you create. VMs in a scale set can also be deployed into multiple availability zones, a single availability zone, or regionally. Scale sets scale up based on metrics (e.g. CPU), typically sampled of last 1/5 minutes.
 
 A host group is a resource that represents a collection of dedicated hosts. You create a host group in a region and an availability zone, and add hosts to it.
@@ -620,7 +626,7 @@ Azure Batch: Managed service to run large-scale parallel and high-performance co
 - runs jobs with as many tasks as you have.
 - identifies failures, requeues work, and scales down the pool as work completes.
 
-Azure Container Instances are a fast and simple way to run a container on Azure. Scenarios for using Azure Container Instance include simple applications, task automation, and build jobs. A container group is a collection of containers that get scheduled on the same host machine. The containers in a container group share a lifecycle, resources, local network, and storage volumes.
+Azure Container Instances are a fast and simple way to run a container on Azure. Scenarios for using Azure Container Instance include simple applications, task automation, and build jobs. A container group is a collection of containers that get scheduled on the same host machine. The containers in a container group share a lifecycle, resources, local network, and storage volumes. Container Instances are cheaper and simpler than AKS, AKS shall be used when service dicovery, automatic scaling, full orchestration is needed.
 
 The Azure Kubernetes Service (AKS) environment is enabled with many features, such as automated updates, self-healing, and easy scaling. AKS supports two auto cluster scaling options: 
 - horizontal pod autoscaler watches the resource demand of pods and increases pods to meet demand based on CPU utilization (pod level)
@@ -710,8 +716,6 @@ Azure virtual network (VNet) allows you to create multiple isolated virtual netw
 
 A virtual network can't span multiple regions. Virtual networks can span resource groups but not subscriptions.
 
-Applications can of course be grouped into separate virtual networks and connect via peering.
-
 By default, Azure routes traffic between
 
 - Subnets within a virtual network.
@@ -719,7 +723,7 @@ By default, Azure routes traffic between
 - On-premises networks.
 - The internet.
 
-VNet: one or more IPv4 CIDR ranges, ranges never overlap (no matter if it is VNet2 or onPremise). 
+VNet: one or more IPv4 CIDR ranges, ranges must never overlap (no matter if it is VNet2 or onPremise). 
 
 Virtual networks allow for the use of 65,536 IP addresses. Therefore assign an address space that isn't larger than a CIDR range of /16 for each virtual network. If you assign a smaller prefix than /16, such as a /15, which has 131,072 addresses, the excess IP addresses become unusable elsewhere. Usable addresses:
 
@@ -731,7 +735,7 @@ You can create multiple subnets within each virtual network. By default, Azure r
 
 Subnet addresses can't be modified after creation, they can only be deleted. Address spaces can be modified after creation.
 
-All Azure resources connected to a VNet have outbound connectivity to the Internet by default. VNets can be set to "External" so they are accessible via internet. VNets can span resource groups but not subscriptions.
+All Azure resources connected to a VNet have outbound connectivity to the Internet by default. VNets can be set to "External" so they are accessible from the internet.
 
 Because it's easy to implement and deploy, and it works well across regions and subscriptions, virtual network peering should be your first choice when you need to integrate Azure virtual networks.
 
@@ -740,7 +744,7 @@ You'll want to enable Azure resources to communicate securely with each other. Y
 - Virtual networks can connect not only VMs but other Azure resources, such as the App Service Environment for Power Apps, Azure Kubernetes Service, and Azure virtual machine scale sets.
 - Service endpoints can connect to other Azure resource types, such as Azure SQL databases and storage accounts. This approach enables you to link multiple Azure resources to virtual networks to improve security and provide optimal routing between resources.
 
-By default, Azure routes traffic between subnets on any connected virtual networks, on-premises networks, and the internet. You also can control routing and override those settings, as follows:
+You also can control routing and override settings as follows:
 
 - Route tables allow you to define rules about how traffic should be directed. You can create custom route tables that control how packets are routed between subnets.
 - Border Gateway Protocol (BGP) works with Azure VPN gateways, Azure Route Server, or Azure ExpressRoute to propagate on-premises BGP routes to Azure virtual networks.
@@ -824,7 +828,7 @@ Azure Virtual WAN is a centrally managed collection of connectivity resources li
 
 A secured virtual hub is an Azure Virtual WAN Hub with associated security and routing policies configured by Azure Firewall Manager. Use secured virtual hubs to easily create hub-and-spoke and transitive architectures with native security services for traffic governance and protection. 
 
-To create an ExpressRoute association with VirtualWANs WAN must be updated from Basic to the Standard tier.
+To create an ExpressRoute association with VirtualWANs WAN requires Standard tier (Basic not sufficient).
 
 Azure DNS uses anycast networking, so each DNS query is answered by the closest available DNS server to provide fast performance and high availability for your domain. Azure DNS also supports private DNS domains. This feature allows you to use your own custom domain names in your private virtual networks, rather than being stuck with the Azure-provided names. Azure DNS also supports alias record sets. You can use an alias record set to refer to an Azure resource, such as an Azure public IP address, an Azure Traffic Manager profile, or an Azure Content Delivery Network (CDN) endpoint. You can't use Azure DNS to buy a domain name. 
 
@@ -862,11 +866,11 @@ Summary:
 | **Enable routing based on URI**    | Supported           | Supported      | Not supported   | Not supported          | Supported  |
 | **Supports Rate Limiting**         | Supported           | Supported      | Not supported   | Not supported          | Supported  |
 
-Azure has Public (Public IP, uses NAT to balance between VMs) and Internal (routing in VNet, enhances security, may haelp to optimize routing) Load Balancers.
+Azure has Public (Public IP, uses NAT to balance between VMs) and Internal (routing in VNet, enhances security, may help to optimize routing) Load Balancers.
 
 Azure DDoS Protection provides countermeasures against the most sophisticated DDoS threats. The service provides enhanced DDoS mitigation capabilities for your application and resources deployed in your virtual networks.
 
-Azure Private Link enables you to access Azure PaaS services (such as Azure Storage and SQL Database) and Azure hosted customer-owned/partner services over a private endpoint in your virtual network. Traffic between your virtual network and the service travels the Microsoft backbone network. Exposing your service to the public internet is no longer necessary. Private Link is accessible from other Azure tenants and also (with isolation) from the public internet.
+Azure Private Link enables you to access Azure PaaS services (such as Azure Storage and SQL Database) and Azure hosted customer-owned/partner services over a private endpoint in your virtual network. Traffic between your virtual network and the service remains in the Microsoft backbone network (no internet). Private Link is accessible from other Azure tenants and also (with isolation) from the public internet. Focus is securing the network path, not authentication/authorization.
 
 Azure Firewall is a managed, cloud-based network security service that protects your Azure Virtual Network resources. Azure Firewall can filter HTTP(S) traffic from Azure to on-premises and outbound to the internet.
 
@@ -945,7 +949,7 @@ Azure Monitor Logs can be accessed in Workspace or Resource (resource, resource 
 
 Subscription have Activity Logs, Resources have Metrics & Logs (need to be configured)
 
-Log Analytics agent can collect data from an on-premise machine. Log Analytics generally enables correlating Azure resource usage and the performance data with the actual application configuration and performance data. Log Analytics is a powerful tool for collecting, analyzing, and querying log data from various Azure resources, including Azure Resource Manager (ARM) deployments
+Log Analytics agent can collect data from an on-premise machine. Log Analytics generally enables correlating Azure resource usage and the performance data with the actual application configuration and performance data. Log Analytics is a powerful tool for collecting, analyzing, and querying log data from various Azure resources, including Azure Resource Manager (ARM) deployments.
 
 Workbooks provide a flexible canvas for data analysis and the creation of rich visual reports within the Azure portal. Customers use Workbooks to explore the usage of an app, to do root cause analysis, put together an operational playbook, and many other tasks
 
@@ -1052,16 +1056,6 @@ Recovery Service Vaults can only be created with "Owner" or "Contributor" roles.
 
 Azure Blob Storage backup and recovery: local backup solution for Azure Blob Storage - backup data is stored in your source Azure storage account rather than being transferred to an Azure Backup storage vault.
 
-- Operational backup for Azure blobs provides you with a continuous backup solution. You don't need to schedule any backups.
-- All changes in an operational blob backup are retained for a specified period of time, and restorable from a selected point in time.
-- The [soft delete feature](https://learn.microsoft.com/en-us/azure/backup/backup-azure-security-feature-cloud "https://learn.microsoft.com/en-us/azure/backup/backup-azure-security-feature-cloud") lets you protect your data from accidental deletion or corruption. During the retention period, you can restore a soft-deleted blob object to its state at the time it was deleted. Soft delete is available for blobs and containers.
-- The retention period for deleted blobs or containers can be specified between 1 and 365 days. The default period is seven days.
-- The operational backup solution supports [blob versioning](https://learn.microsoft.com/en-us/azure/storage/blobs/versioning-enable "https://learn.microsoft.com/en-us/azure/storage/blobs/versioning-enable"). You can restore an earlier version of a blob, or recover your data after incorrect modification or deletion.
-- The [point-in-time restore feature for block blobs](https://learn.microsoft.com/en-us/azure/storage/blobs/point-in-time-restore-overview "https://learn.microsoft.com/en-us/azure/storage/blobs/point-in-time-restore-overview") lets you protect against accidental deletion or corruption. During the retention period, you can restore block blobs from the present state to a state at a previous time.
-- The [resource lock](https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/lock-resources "https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/lock-resources") feature prevents resources from being accidentally deleted or changed. You can set the resource lock to prohibit deletion or allow reading only. Details:
-  - **CanNotDelete** permits authorized users to read and modify a resource, but they can't delete the resource without first removing the lock.
-  - **ReadOnly** allows authorized users to read a resource, but they can't delete or change the resource. Applying this lock is like restricting all authorized users to the permissions granted by the Reader role in Azure RBAC.
-
 The backup job for a virtual machine involves two phases:
 
 - First, a virtual machine snapshot is taken.
@@ -1114,8 +1108,6 @@ SDL reviews bring clarity around security features. SDL can help you maintain an
 Advanced Thread protection in Azure Storage currently only available for Blob Storage.
 
 Inbound/outbound port rules: Processing stops once traffic matches a rule (low numbers first, high numbers later/not processed)
-
-Bitlocker encrypts Windows VMs, DM Crypt is used for Linux VMs
 
 DNS port is 53, WINS/NetBIOS is 137 (UDP), SMB port 445.
 
@@ -1179,14 +1171,7 @@ Azure Migrate can discover and assess servers including SQL and web apps. It can
 
 Azure App Service Migration Assistant can assess and migrate your web apps
 
-Azure Database Migration Service can migrate on-premises databases, including: 
-
-- Azure virtual machines running SQL Server
-- Azure SQL Database (Database Migration Assistant)
-- Azure SQL Managed Instance
-- Azure Cosmos DB
-- Azure Database for MySQL
-- Azure Database for PostgreSQL
+Azure Database Migration Service can migrate on-premises databases including MySQL & Postgres.
 
 SQL Server DBs can be migrated online (continuous sync of data, no downtime) and offline (cut-off with downtime)
 
